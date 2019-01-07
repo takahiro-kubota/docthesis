@@ -1,0 +1,135 @@
+\begin{eabstract}
+ In general, it is
+ difficult to verify security of cryptographic protocols.
+ Indeed, flaws of designs and security proofs of some protocols
+ were found after they had been presented. In 
+ deductive verification using 
+ formal methods, protocols and security properties are described in
+ formal languages, and correctness of designs and security proofs are
+ deduced by inference rules. While a number of formal frameworks and
+ verification tools have been developed and applied to classical
+ protocols, few formal methods have been applied to security proofs
+ of quantum protocols.
+ The contributions of this thesis consist of the following three
+ results.
+
+ First, we developed a software tool to verify
+ bisimilarity
+ of configurations (pairs of processes and quantum states) of qCCS, 
+ a quantum process calculus presented by Feng et al.
+ Bisimilar configurations behave indistinguishably from the outside.
+ We designed a formal framework for the verifier, which we call
+ nondeterministic qCCS, on the basis of qCCS by Feng et al.
+ While the transition system of qCCS is both
+ nondeterministic and probabilistic,
+ we presented a nondeterministic and 
+ non-probabilistic transition system for configurations, extending the
+ definition of them.
+ This allows the verifier to verify bisimilarity efficiently.
+ Next, we designed the verifier to handle security parameters and
+ quantum states symbolically. A purpose is to apply it to
+ quantum cryptographic protocols, where the dimensions of quantum states
+ depend on security parameters.
+ When the verifier checks bisimulation relation of
+ configurations, it uses user-defined equations on the symbolic
+ representations to check the quantum states that the
+ outsider can access are always equal.
+ Besides, the verifier is sound with respect to
+ qCCS, that is, when it runs with two configurations as input and
+ returns
+ $\mathit{true}$, a symbol representing
+ success of the verification, the configurations are in bisimulation
+ relation in the qCCS's definition.
+
+ Second, we defined the notion of approximate bisimulation 
+ relation of configurations of nondeterministic qCCS.
+ Approximately bisimilar configurations behave indistinguishably
+ from the outside up to negligible probability.
+ We then proved that the approximate bisimulation relation is
+ closed under application of evaluation contexts of processes.
+ This suggests sanity of our definition as well as 
+ feasibility in practice. As a result, we are able to
+ formally verify not only that protocols are precisely equivalent but
+ also that protocols are equivalent up to negligible probability.
+ Moreover, we extended the verifier
+ to verify the approximate bisimulation relation of
+ configurations.
+
+ Third, we formally verified Shor and Preskill's
+ security proof of BB84 quantum key distribution protocol. 
+ They first considered another protocol (the EDP-based protocol)
+ and proved the security of BB84 and the EDP-based protocol is
+ equivalent. They next proved the latter is secure.
+ For the first step of their proof, we formalized the two protocols
+ as configurations and formally verified that they are bisimilar.
+ For the second step, we defined a completely secure protocol 
+ (EDPideal)
+ and formally verified that the configurations of it and the EDP-based
+ protocol are approximately bisimilar. This is the first work
+ where a security proof of a quantum cryptographic protocol 
+ is mechanically verified using a software tool.
+\end{eabstract}
+
+\begin{jabstract}
+ 暗号プロトコルの安全性の検証は一般に難しく, 実際, いくつかのプロトコルの
+ 設計や安全性証明の誤りが, 提案後に指摘されるということが起こってきた.
+ 形式的手法を用いた導出的な検証では, プロトコルや安全性証明を形式言語で記述し, 
+ 設計や証明の正しさを推論規則にしたがって導出する.
+ 古典暗号プロトコルに対しては,
+ 検証のために多くの形式体系や検証ツールが開発され適用されているが,
+ 量子暗号プロトコルの安全性証明に対して形式的手法は
+ ほとんど適用されていない.
+本研究の貢献は以下の3種類の結果からなる.
+
+ 一つ目の結果は, Fengらの量子プロセス計算qCCSのコンフィグレーション(プロ
+ セスと
+ 量子状態の組)たちの双模倣性の検証器を実装したことである.
+ 双模倣なコンフィグレーションたちは, 外から見て同じように振る舞う. 
+ まず我々は, 検証器のための形式体系である非決定的qCCSを,
+ FengらのqCCSに基づいて設計した. qCCSの状態遷移系は
+ 確率的かつ非決定的であったが, 定義を拡張したコンフィグレーションに
+ 対する確率的でない状態遷移系を提案し, 採用した.
+ このことにより, 検証器は双模倣性を効率よく検証する.
+ 次に, 我々は検証器を, セキュリティパラメタや量子状態を記号的に
+ 扱うように設計した. 量子暗号プロトコルでは, 量子状態の次元がセキュリティ
+ パラメタに依存することがあるが, そのようなプロトコルに適用するためであ
+ る. 双模倣関係の検証において,
+ 検証器は, 外部者がアクセス可能な量子状態が常に等しいことを確認するため
+ に, 量子状態の記号表現に対するユーザ定義の等式を用いる.
+ % また, 量子暗号プロトコルでは, 量子状態がセキュリティパラメタに依存する
+ % ため, その次元が不定になることがある.
+ % そのような対象に適用するため, 我々は検証器を,
+ % セキュリティパラメタや量子状態を記号的に扱うように
+ % 設計した. 双模倣関係の検証において, 
+ % 検証器は, 外部者がアクセス可能な量子状態が常に等しいことを確認するために,
+ % 量子状態の記号表現に対するユーザ定義の等式を用いる.
+ さらに, 検証器はqCCSに対して健全である.
+ すなわち, 検証器にふたつのコンフィグレーションを入力したとき,
+ 検証成功を表す$\mathit{true}$を出力したならば, それらはqCCSの定義での
+ 双模倣関係にある.
+
+ 二つ目の結果として, 我々は, 非決定的qCCSのコンフィグレーションたちが,
+ 無視できる確率を除いて外から見て同じように振る舞うという関係である
+ 確率双模倣関係を定義した. 
+ さらに, 確率双模倣関係がプロセスの評価文脈の適用に対して閉じていることを
+ 示した. このことは, 定義の妥当性を裏付けており, また, 応用上も有用であ
+ る.
+ 結果的に, 非決定的qCCSを用いて, プロトコルが完全に等価ということ
+ だけでなく, 無視できる確率を除いて等価であるということを検証できる
+ ようになった. また, 確率双模倣関係を検証するよう検証器を拡張した.
+
+ 三つ目の結果は, ShorとPreskillによるBB84量子鍵配送プロトコルの安全性証
+ 明を, 検証器を用いて形式的に検証したことである.
+ 彼らの証明では,
+ 第一に安全性が解析しやすい別のプロトコル(EDPに基づくプロトコル)が考えら
+ れ, BB84とEDPに基づくプロトコルの安全性が等価であることが示された.
+ 第二に, EDPに基づくプロトコルが安全であることが示された.
+ 我々は, 第一のステップに対しては, この二つのプロトコルを形式化した
+ コンフィグレーションが双模倣であることを検証した.
+ 第二のステップに対しては, まず, 
+ 完全に安全な鍵配送プロトコル(EDPideal)を定義し, それと
+ EDPに基づいたプロトコルのコンフィグレーションが確率双模倣であることを
+ 検証した. 量子鍵配送プロトコルの数学的な安全性を,
+ ソフトウェアを用いて機械的に検証したのは本研究が初めてである.
+\end{jabstract}
+% 検証した ソフトウェアを用いて保証することに成功した  

@@ -1,0 +1,944 @@
+\chapter{Preliminaries}
+\label{prel}
+\section{Notations}
+We use the following notations in this thesis.
+\begin{itemize}
+ \item $\mathbb{N}$, $\mathbb{N}_+$, $\mathbb{R}$, and $\mathbb{C}$ are
+       the set of natural numbers, the set of positive natural numbers, 
+       real numbers, and complex numbers,
+       respectively.
+ \item $e$ is the base of the natural logarithm.
+ \item For $a \in \mathbb{C}$, $a^\ast$ is the complex conjugate of
+       $a$, and $|a| = \sqrt{a^\ast a}$.
+ \item For a linear operator $A$, $A^\dagger$ is the adjoint of
+       $A$. $I$ and $O$ are the identity operator and the zero operator
+       on
+       a vector space with the appropriate dimension in a context.
+       $A > 0$ means that $A$ is positive.
+ \item $[1..n]$, $(0,1]$, and $[0,1]$ are
+       $\{1,2,...,n\}$, $\{x \in \mathbb{R}\,|\,0 < x \le 1\}$, and
+       $\{x \in \mathbb{R}\,|\,0 \le x \le 1\}$, respectively.
+ \item $\R^\ast$ is the reflexive and transitive closure of 
+       a binary relation $\R$. $\R^{-1}$ is the inverse relation of
+       $\R$.
+ \item $\Pr(A)$ is the probability that an event $A$ happens.
+ \item $I(X;Y)$ is the mutual information of discrete
+       classical random variables $X$ and $Y$.
+%\item $A:=B$ means that $A$ is defined as $B$.
+\end{itemize}
+
+\section{Basic Quantum Information}
+We consulted the textbooks by Nielsen and Chuang 
+\cite[Part 1]{NielsenChuang-Kimura2004} and 
+by Ishizaka et al.\ \cite{Ishizakaetal2012} in writing this section.
+\subsection*{Quantum States and Operators}
+A quantum bit (qubit) is a physical system
+whose {\it pure state} is described as a unit vector in
+a 2-dimensional complex Hilbert space. The space is called
+the state space of the qubit.
+For a 2-dimensional complex Hilbert space $\H$,
+we can fix an orthonormal basis of $\H$ and write one as
+$\ket{0}$ and the other as $\ket{1}$. 
+For $\ket{\phi} \in \H$,
+the adjoint $\ket{\phi}^\dagger$ of a qubit string $\ket{\phi}$ is denoted
+by $\bra{\phi}$.
+For $\ket{\phi},\ket{\psi} \in \H$,
+their inner product is written $\braket{\phi}{\psi}$.
+$\mathbb{C}^2$ with the
+canonical inner product is an instance of 2-dimensional Hilbert space.
+For all $\ket{\psi} \in \mathbb{C}^2$,
+there exist $\alpha, \beta \in \mathbb{C}$ satisfying
+\begin{align*}
+&\ket{\psi} = \alpha \ket{0} + \beta \ket{1} \mbox{ and }|\alpha|^2 + |\beta|^2 = 1,
+\mbox{ where }\ket{0} 
+:= \begin{bmatrix}
+    1\\
+    0
+  \end{bmatrix},
+~\ket{1}
+:= \begin{bmatrix}
+  0 \\
+  1
+  \end{bmatrix},
+\end{align*}
+and for all $\ket{\phi}, \ket{\xi} \in \mathbb{C}^2$, if
+$\ket{\phi} = a\ket{0} + b\ket{1}$ and $\ket{\xi} = c\ket{0} +
+d\ket{1}$, then 
+\[
+\braket{\phi}{\psi} = a^\ast c + b^\ast d.
+\]
+The two pure states $\ket{0}$ and $\ket{1}$ correspond to classical bit
+values 0 and 1. Quantum states $\frac{\ket{0}+\ket{1}}{\sqrt{2}}$ and
+$\frac{\ket{0}-\ket{1}}{\sqrt{2}}$ are written $\ket{+}$ and $\ket{-}$.
+
+A discrete time evolution of a qubit is a unitary operator on its state
+space. For example, the following operators on $\mathbb{C}^2$ are
+unitary.
+\[
+ X := \begin{bmatrix}
+  0 & 1\\
+  1 & 0
+  \end{bmatrix},\,
+ Y := \begin{bmatrix}
+  0 & -i\\
+  i & 0
+  \end{bmatrix},\,
+ Z := \begin{bmatrix}
+  1 & 0\\
+  0 & -1
+  \end{bmatrix},\,
+ H := \frac{1}{\sqrt{2}}
+ \begin{bmatrix}
+  1 & 1\\
+  1 & -1
+ \end{bmatrix}.
+\]
+$X, Y,$ and $Z$ are called Pauli matrices. $H$ is called
+an Hadamard transformation. The following equations hold for the matrices.
+\begin{align*}
+ &X\ket{0} = \ket{1},\, X\ket{1} = \ket{0},\, Z\ket{+} = \ket{-},\,
+ Z\ket{-} = \ket{+},\, Y = iXZ,\\
+ &H\ket{0} = \ket{+},\,H\ket{1} = \ket{-}.
+\end{align*}
+$X$ is said to give a bit flip, and
+$Z$ is said to give a phase flip.
+
+Let $\H_1$,...,$\H_n$ be 2-dimensional complex Hilbert spaces.
+The pure state of a qubit string with bit length $n$ is described as a
+unit vector in $\H_1 \otimes \cdots \otimes \H_n$.
+We write $\ket{\psi_1...\psi_n}$ as $\ket{\psi_1} \otimes...\otimes
+\ket{\psi_n}$.
+% Let $\ket{\psi_1},...,\ket{\psi_n}$ be quantum states of qubits.
+% The state of the qubit string $\ket{\psi_1...\psi_n}$, whose bit length
+% is $n$,
+% is defined as the 
+% tensor product $\ket{\psi_1} \otimes...\otimes \ket{\psi_n}$.
+The set $\{\ket{x_1...x_n}\}_{x_1,...,x_n \in \{0,1\}}$ is 
+an orthonormal basis and
+called the \emph{computational basis state}.
+In this thesis, we may convert
+$\ket{\psi} \otimes \ket{\phi} \in \H_1 \otimes \H_2$ and 
+$\ket{\phi} \otimes \ket{\psi} \in \H_2 \otimes \H_1$ each other,
+where $\H_1$ and
+$\H_2$ are Hilbert spaces. This conversion is written as $\simeq$.
+
+Let $\ket{\phi_1},...,\ket{\phi_m}$ be states of qubit strings with the
+same bit length and $p_1,...,p_m$ satisfy $\sum_{i=1}^{m}p_i = 1$
+and $0 \le p_i \le 1$ for all $i$. The quantum {\it mixed state} where the
+state is $\ket{\phi_i}$ with probability $p_i$ for all $i$ is
+denoted by the {\it density operator} $\sum_{i=1}^m
+p_i\ket{\phi_i}\bra{\phi_i}$. The set of density operators on 
+a Hilbert space $\H$ is written $\D(\H)$.
+We may omit scalar multiplication when it is trivial.
+A local quantum 
+operation acting on a mixed state is represented by a 
+\emph{trace preserving and completely-positive (TPCP) map}.
+A map $\E$ is positive if it maps a positive operator to a
+positive operator.
+A map $\E$ is CP if $\E \otimes I$ is positive
+for all $n \in \mathbb{N}$, which is the dimension of the domain of $I$.
+For each TPCP map $\E$,
+there exist $V_1,...,V_k$ that satisfy $\E(\rho) = \sum_{i=1}^{k} V_i
+\rho V_i^\dagger$ and $\sum_{i=1}^{k}V_i^\dagger V_i =I$.
+For each CP map $\F$,
+there exist $W_1,...,W_l$ that satisfy $\F(\rho) = \sum_{j=1}^{l} W_j
+\rho W_j^\dagger$.
+
+\subsection*{Quantum Measurement}
+To obtain classical information from a quantum system in a certain state,
+we have to
+\emph{measure} some physical value of the system in the state. A quantum
+measurement may change the state of the target system.
+A physical value that can be measured is called an \emph{observable}.
+An observable of a system $\ket{\psi} \in \H$
+is denoted by an Hermitian operator on $\H$, namely,
+an operator $A$ satisfying $A = A^\dagger$.
+An Hermitian operator $A$ has an eigenvalue decomposition
+$A = \sum_{i \in I} \lambda_i \ket{i}\bra{i}$, where $\lambda_i$ is an
+eigenvalue and $\ket{i}$ is the eigenvector corresponding to $\lambda_i$.
+$A$ has the unique spectral decomposition $A = \sum_{j \in J}
+\lambda_j P_j$, where $\lambda_j = \lambda_{j'}$ implies $j = j'$
+for all $j, j' \in J$. $P_j$ is called the projector to the 
+eigenspace of $\lambda_j$.
+
+When we measure an observable $A = \sum_i \lambda_j P_j$ of
+a system in a pure state $\ket{\psi}$, we obtain
+the result $\lambda_j$ with probability $\bra{\psi}P_j
+\ket{\psi}$, and the post-measurement state is 
+$\frac{P_j \ket{\psi}}{\sqrt{\bra{\psi}P_j\ket{\psi}}}$.
+For example, if we measure an observable $Z = 1\ket{0}\bra{0}
++ (-1)\ket{1}\bra{1}$ of
+a state $\alpha \ket{0} + \beta \ket{1}$, we obtain
+the result $1$ and the post-measurement
+state $\ket{0}$
+with probability $|\alpha|^2$, and 
+the result $-1$ and the post-measurement
+state $\ket{1}$
+with probability $|\beta|^2$.
+We can calculate the probability of
+obtaining each measurement result from a mixed state.
+Let the objective mixed state is $\rho = 
+\sum_i p_i \ket{\psi_i}\bra{\psi_i}$.
+When we measure an observable $A = \sum_i \lambda_i P_i$,
+the probability that we obtain $\lambda_j$ is
+\[
+ \sum_i p_i \bra{\psi_i} P_j \ket{\psi_i} 
+ = \tr{}{P_j \rho P_j}
+ = \tr{}{P_j \rho},
+\]
+and the post-measurement state is
+\[
+ \sum_i \frac{p_i \bra{\psi_i}P_j\ket{\psi_i}}{\tr{}{P_j \rho}} \frac{P_j\ket{\psi_i}\bra{\psi_i}P_j}
+ {\bra{\psi_i}P_j\ket{\psi_i}}
+ =
+ \frac{P_j \rho P_j}{\tr{}{P_j \rho}}.
+\]
+
+Some abbreviations about measurements are often used. We say
+``measure $\ket{\psi}$ in the $\{\ket{0},\ket{1}\}$ basis'' for
+``measure an observable $0\ket{0}\bra{0}+1\ket{1}\bra{1}$ of
+$\ket{\psi}$''. Similarly, 
+we may say ``measure $\ket{\psi}$ in the $\{\ket{+},\ket{-}\}$ basis'' for
+``measure an observable $0\ket{+}\bra{+}+1\ket{-}\bra{-}$ of
+$\ket{\psi}$''.
+
+For a density operator $\rho$ and an observable $\sum_j \lambda_j P_j$,
+$\frac{P_j \rho P_j}{\tr{}{P_j \rho}}$ is the density operator
+denoting the conditional probability distribution given the result $\lambda_j$ 
+of the measurement. When the pre-measurement state is $\rho$,
+the probability distribution obtained after the measurement of
+an observable $\sum_j \lambda_j P_j$ is
+\[
+ \sum_j \tr{}{P_j \rho} \frac{P_j \rho P_j}{\tr{}{P_j \rho}} =
+ \sum_j P_j \rho P_j.
+\]
+The map $\E_{\mathit{projmeas}}(\rho) =  \sum_j P_j \rho P_j$ is a
+TPCP map. For all $j$, the map $\E^j_{\mathit{projmeas}}(\rho) =
+P_j \rho P_j$ is a CP map.
+
+\subsection*{Partial Trace}
+Let $\rho \in \D(\H_1 \otimes \H_2)$.
+$\rho$ can be written as $\sum_i C_i \otimes D_i$, where
+$C_i$ is a linear operator on $\H_1$
+and $D_i$ is on $\H_2$ for all $i$. 
+The \emph{partial trace} of $\rho$ by $\H_1$, denoted
+by $\mathrm{tr}_{\H_1}(\rho)$, is defined as
+$\sum_i \tr{}{C_i}D_i$. When one
+measures an observable $I \otimes (\sum_j \lambda_j P_j)$ on
+$\H_1 \otimes \H_2$, he obtains the result
+$\lambda_j$ and the post-measurement state is
+$\frac{(I \otimes P_j)\rho(I \otimes P_j)}
+{\tr{}{(I \otimes P_j)\rho}}$
+with probability $\tr{}{(I \otimes P_j)\rho}$ for
+a pre-measurement state $\rho$.
+Let us write $\rho_2$ for $\tr{\H_1}{\rho}$.
+We have
+\[
+ \tr{}{(I \otimes P_j)\rho} = \tr{}{P_j\rho_2}
+\]
+and
+\[
+ \tr{\H_1}{\frac{(I \otimes P_j)\rho(I \otimes P_j)}
+ {\tr{}{(I \otimes P_j)\rho}}}
+=
+ \frac{P_j \rho_2 P_j}
+{\tr{}{P_j\rho_2}}.
+\]
+Hence, the above measurement can be considered as the measurement of
+the observable $\sum_j{\lambda_j}P_j$ for the 
+pre-measerment state $\rho_2$.
+% $A$ of the state $\mathrm{tr}_{\H_1}(\rho)$
+% and that of $A \otimes I \in \H_1 \otimes \H_1$ gives him or her
+% identical measurement results and post-measurement states
+% with identical probability.
+Assume that Bob can measure an observable 
+only on the partial quantum system $\H_2$.
+% but the total system corresponds to
+%$\H_1 \otimes \H_2$.
+For the above reason,
+we may say that $\mathrm{tr}_{\H_1}(\rho)$
+is the quantum state that he has access or
+his {\it view}, in the following chapters.
+
+\section{Quantum Error Correcting Code}
+The quantum key distribution (QKD) protocols that are
+our target of formal verification in this thesis include an error
+correction step after quantum communication.
+The error correction step is based on Calderbank-Shor-Steane (CSS)
+\cite{CalderbankShor1996} quantum error correcting code (QECC), and
+it is described in the stabilizer formalism. In this 
+section, we introduce 
+necessary definitions and properties of the stabilizer formalism and
+CSS QECC.
+
+We rely on the textbook by Nielsen and Chuang 
+\cite[Chapter 10]{NielsenChuang-Kimura2004}.
+\subsection{Stabilizer Formalism}
+\subsubsection{Stabilizers}
+A quantum state $\ket{\psi}$ is \emph{stabilized} by a unitary operator
+$U$ if $U\ket{\psi} = \ket{\psi}$. Let the Pauli group $G_n$ on
+$2^n$-dimensional space be defined as
+\[
+ G_n := \{\pm g, \pm ig \,|\, g = A_1 \otimes A_2 \cdots \otimes A_n,
+ A_j \in \{I, X, Y, Z\} \mbox{ for all } j\}.
+\]
+For $g, g' \in G_n$, $g$ and $g'$ is said to be \emph{commutative}
+if $gg' = g'g$ and \emph{anticommutative} if $gg' = -g'g$. For all $g, g'
+\in G_n$, $g$ and $g'$ are either commutative or
+anticommutative.
+
+Let $S$ be a subgroup of $G_n$ and a set $V_S$ be defined
+as
+\[
+ V_S := \{\ket{\psi} \,|\, \mbox{ For all } g \in S,\, g \mbox{ stabilizes
+} \ket{\psi} \}.
+\]
+$S$ is said to be commutative if $g$ and $g'$ are
+commutative for all $g, g' \in S$.
+$V_S$ is a vector space and $S$ is called the stabilizer of $V_S$.
+$V_S$ is said to be non-trivial if $V_S \neq \{0\}$.
+The condition that $V_S$ is non-trivial is characterized as follows.
+
+\begin{prop}
+ $V_S$ is non-trivial if and only if
+ $S$ is commutative and $-I \notin S$ holds.
+\end{prop}
+
+Let $\{g_1, g_2, ...,g_l\} \subseteq S$.
+If for all $a \in S$, $a$ can be written as a product of
+the elements in $\{g_1, g_2, ...,g_l\}$, $\{g_1,g_2,...,g_l\}$ is
+said to be a generator of $S$, and we write $S = \langle
+g_1, g_2,...,g_l \rangle$. 
+A generator $\{g_1, g_2, ...,g_l\}$ is said to be
+\emph{independent} if for all $i$, $g_i$ cannot be written as a
+product of the elements in $\{g_1, g_2, ...,g_l\} \backslash \{g_i\}$.
+The following proposition gives the dimension of the space
+of quantum codewords in the later discussion.
+
+\begin{prop}
+ Let $S = \langle g_1, g_2,...,g_{n - k} \rangle$. $V_S$ is 
+ a $2^k$-dimensional vector space if
+ $\{g_1, g_2, ...,g_{n - k}\}$ is independent and commutative,
+ and $-I \notin S$ holds.
+\end{prop}
+
+We have the following way to check independence and commutativity
+of generators $g_1, g_2, ..., g_l$ using bit vectors and matrices.
+For $g \in G_n$, let $r(g)$ be the bit vector with the length $2n$ defined
+as
+\begin{align*}
+ &r(g) := 
+  \begin{bmatrix}
+   b_1 & b_2 & ... & b_n & b_{n+1} & ... & b_{2n}
+  \end{bmatrix}
+ \mbox{ where}\\
+ &g = cA_1 \otimes A_2 \otimes \cdots A_n \mbox{ and for all }j 
+ \mbox{ and } c \in \{\pm 1, \pm i\},\\
+ &\mbox{ if } A_j = I \mbox{ then } b_j = 0 \mbox{ and } b_{n+j} = 0\\
+ &\mbox{ if } A_j = X \mbox{ then } b_j = 1 \mbox{ and } b_{n+j} = 0\\
+ &\mbox{ if } A_j = Z \mbox{ then } b_j = 0 \mbox{ and } b_{n+j} = 1\\
+ &\mbox{ otherwise } \mbox{ then } b_j = 1 \mbox{ and } b_{n+j} = 1
+\end{align*}
+Next, let $\Lambda$ be
+\[
+ \begin{bmatrix}
+    0 & I\\
+    I & 0
+  \end{bmatrix}.
+\]
+We then have that
+$r(g) \Lambda r(g') = 0$ if and only if $g$ and $g'$ are commutative.
+We can describe a generator $\{g_1,...,g_l\}$ as a matrix
+\[
+ \begin{bmatrix}
+  r(g_1)\\
+  r(g_2)\\
+  ... \\
+  r(g_l)
+ \end{bmatrix}
+\]
+though it does not keep the information of
+scalar multiplication $\pm 1$, $\pm i$.
+
+In the following discussions, we assume 
+$\{g_1, g_2,...,g_l\}$ are independent and commutative, and
+$-I \notin S$ holds for each
+stabilizer $S = \langle g_1, g_2,...,g_l \rangle$. 
+
+\subsubsection{Unitary Operations in Stabilizer Formalism}
+Let $V_S$ be stabilized by a subgroup $S = 
+\langle g_1, g_2,...,g_l \rangle$. Let $\ket{\psi}$ be an 
+arbitrary element in $V_S$. For all unitary operator $U$ and $g \in S$,
+we have 
+\[
+ U\ket{\psi} = Ug\ket{\psi} = UgU^\dagger U\ket{\psi}.
+\]
+Therefore, $UV_S := \{U\ket{\psi}\,|\,\ket{\psi} \in V_S\}$ is
+stabilized by $USU^\dagger := \{UgU^\dagger \,|\, g \in S \}$.
+
+\subsubsection{Measurement in Computational Bases in Stabilizer 
+Formalism}
+Let us consider the measurement of an observable 
+\[
+g \in
+\{A_1 \otimes A_2 \otimes \cdots \otimes
+A_n, A_i \in \{I, X, Y, Z\} \mbox{ for all } i\} \subseteq G_n.
+\]
+Assume the system is in a state $\ket{\psi}$ that is stabilized
+by $S = \langle g_1,g_2,...,g_l \rangle$. There are two possibilities.
+\begin{enumerate}
+ \item $g$ is commutative with all $g_1, g_2,...,g_l$.
+ \item $g$ is anticommutative with some of $g_1, g_2,...,g_l$.
+       In this case, we can assume $g$ is anticommutative
+       with $g_1$ and commutative with
+       $g_2,...,g_l$ without loss of generality.
+       When $g$ is anticommutative with $g_i$, we can relabel
+       $g_i$ to $g_1$ and $g_1$ to $g_i$. We then have that
+       $g$ is commutative with $g_1 g_j$ if $g_j$ is not commutative
+       with $g$. We can replace $g_j$ with $g_1 g_j$.
+\end{enumerate}
+In fact, the result of the measurement is as follows in each case.
+\begin{enumerate}
+ \item Either $g$ or $-g$ is in $S$. If $g \in S$ holds, then
+       the measurement result is $1$ with probability $1$.
+       If $-g \in S$ holds, then
+       the measurement result is $-1$ with probability $1$.
+       In both cases, the measurement does not change the state
+       $\ket{\psi}$.
+ \item Neither $g$ nor $-g$ is in $S$.
+       We have the measurement result $1$ or $-1$ with 
+       probability $\frac{1}{2}$. The state after the measurement
+       is stabilized by $\langle g, g_2, ..., g_l \rangle$ if the
+       result is $1$ or by $\langle -g, g_2, ..., g_l \rangle$ if
+       $-1$.
+\end{enumerate}
+
+\subsection{Stabilizer Codes}
+A vector space that is stabilized by 
+$S = \langle g_1, g_2,..., g_{n-k} \rangle$ is called
+\emph{$[n,k]$-stabilizer code} and written $C(S)$. The elements in $C(S)$
+are called codewords.
+We define the \emph{logical} computational basis states
+as follows. Let $\bar Z_1, \bar Z_2, ..., \bar Z_k \in G_n$ 
+make the set $\{g_1, g_2,...,g_{n-k}, \bar Z_1, \bar Z_2,
+..., \bar Z_k \}$ independent and commutative.
+The state that is stabilized by 
+\[
+\langle
+g_1, g_2,...,g_{n-k}, (-1)^{x_1}\bar Z_1, (-1)^{x_2}\bar Z_2,
+..., (-1)^{x_k}\bar Z_k \rangle
+\]
+ is defined to be a
+logical computational basis state $\ket{x_1 x_2 \cdots x_k}_L$.
+For $j \in [1..k]$, $\bar Z_j$ is the logical Pauli operator $Z$
+that acts on the $j$-th logical qubit.
+Let $\bar X_j \in G_n$ be an operator that satisfies
+$\bar X_j \bar Z_j \bar X_j^\dagger = - \bar Z_j$ and
+$\bar X_i \bar Z_j \bar X_i^\dagger = \bar Z_i$ for all $i$ with
+$i \neq j$. $\bar X_j$ is a logical $X$ operator that
+acts on the $j$-th logical qubit.
+
+In fact, it is sufficient to
+consider bit flip and phase flip errors
+to consider correction of general errors.
+Let us take an arbitrary element $E \in G_n$ acting on
+$C(S)$, where $S = \langle g_1, g_2,..., g_{n-k} \rangle$.
+There are the following 3 cases.
+\begin{enumerate}
+ \item $E$ is anticommutative with some $g_i$ for $i \in [1..n-k]$.
+       By the error $E$, the stabilizer becomes 
+       $\langle g_1, g_2,...,-g_i,...,g_{n-k} \rangle$.
+       When the observables \\
+       $g_1,...,g_i,...,g_{n-k}$ are measured,
+       the results are $1,...,-1,...,1$. Therefore, we
+       can identify the position $i$ by the measurement.
+ \item $E \in S$. The error $E$ does not change the objective state.
+ \item $E$ is commutative with $g_i$ for all $i \in [1..n-k]$ and 
+       $E \notin S$. Such errors maps a codeword in $C(S)$ to
+       a codeword in $C(S)$.
+       In fact, some of the errors cannot be corrected.
+\end{enumerate}
+
+Let the \emph{centralizer} $Z(S)$ of $S$ be defined as
+\[
+Z(S) := \{E \,|\, Eg=gE \mbox{ for all } g \in S \}.
+\]
+We have the following theorem.
+
+\begin{thm}
+\label{pre:correctable}
+ Let $C(S)$ be a stabilizer code and $\{E_j\}_{j \in J}$ be a set of
+ operators in $G_n$. If $E_j^\dagger E_k \notin Z(S) - S$ for all 
+$j, k \in J$, then $\{E_j\}_{j \in J}$ is the set of errors
+that can be corrected.
+\end{thm}
+We describe the way to correct errors. 
+Let $S = \langle g_1, g_2,..., g_{n-k} \rangle$ and $\{E_j\}_{j \in J}$
+be a set of errors satisfying the condition of Theorem
+\ref{pre:correctable}. Assume that an arbitrary error $E_j$ has
+performed to an arbitrary codeword in $C(S)$. The error correction
+goes as follows.
+\begin{itemize}
+ \item We measure the observables $g_1,g_2,...,g_{n-k}$, and
+       let measurement results, namely the \emph{syndrome},
+       be $\beta_1,\beta_2,...,\beta_{n-k} \in
+       \{1,-1\}$. $E_j g_l E_j^\dagger = \beta_l g_l$ holds for all $l
+       \in [1..n-k]$.
+ \item If $E_j$ is the only error that has the syndrome
+       $\beta_1,\beta_2,...,\beta_{n-k}$, then it is sufficient
+       to correct the error to apply $E_j$ to the objective system,
+       because $E_j\beta_l g_l E_j^\dagger = \beta_l^2 g_l = g_l$ holds.
+ \item If there is an error $E_{j'}$ in $\{E_j\}_{j \in J}$
+       that has the same syndrome as $E_j$, then it is sufficient
+       to correct the error to apply $E_{j'}^\dagger$ to the objective
+       system.
+       The reason is as follows. Let $P$ be a projector to $C(S)$.
+       Since $E_j$ and $E_{j'}$ have the same error syndrome,
+       $E_jPE_j^\dagger = E_{j'}PE_{j'}^\dagger$ holds.
+       This implies $E_{j'}^\dagger E_jPE_j^\dagger E_{j'} = P$.
+       Because of the assumption that $\{E_j\}_{j \in J}$ satisfies
+       the condition of Theorem \ref{pre:correctable},
+       $E_{j'}^\dagger E_{j} \in S$ holds. Namely, $E_{j'}^\dagger E_j$
+       stabilizes the objective state.
+\end{itemize}
+\subsubsection{Distance of Quantum Codes}
+Similarly to classical codes, the notion of distance of
+quantum codes is defined. The weight of $E \in G_n$ is defined
+as the number of the factors of $E$ that are not equal to $I$.
+The \emph{distance} of a stabilizer code $C(S)$
+is defined as the minimum weight of $Z(S) - S$.
+When $C(S)$ is an $[n,k]$-stabilizer code with the distance $d$,
+$C(S)$ is said to be a $[n,k,d]$-stabilizer code.
+By Theorem $\ref{pre:correctable}$, a stabilizer code with the distance
+$2t+1$ can correct arbitrary errors in $t$ qubits.
+
+\subsection{CSS Quantum Error Correcting Code}
+\subsubsection*{Stabilizer Form}
+CSS quantum error correcting code (QECC) \cite{CalderbankShor1996} is
+described in
+the stabilizer formalism. It employs a classical $[n,k_1]$ code $C_1$ and
+a $[n,k_2]$ code $C_2$ satisfying $C_2 \subseteq C_1$.
+It is also assumed that both $C_1$ and $C_2^\perp$ correct $t$ 
+errors. Let $\CSS(C_1,C_2)$ be a $[n, k_1 - k_2]$ stabilizer code that
+is stabilized
+by the set whose generator is described by the following matrix
+\[
+ \begin{bmatrix}
+    H(C_2^\perp) & 0\\
+    0 & H(C_1)
+  \end{bmatrix},
+\]
+where $H(C_2^\perp)$ and $H(C_1)$ are parity check matrices of
+$C_2^\perp$ and $C_1$, whose types are $(n-k_2) \times n$ and $k_1
+\times n$.
+The generators $g_1,g_2,...,g_{n-(k_1 - k_2)}$ are commutative and 
+independent since $C_2 \subseteq C_1$.
+The distance of $\CSS(C_1,C_2)$ is at least $2t + 1$.
+
+\subsubsection*{Construction of CSS code}
+Let $w \in \{0,1\}^k$ and assume $\ket{w}$ be the state to be coded.
+Let $x = G_1 w \in C_1$, where $G_1$ is
+a generator matrix of $C_1$. The codeword $\ket{x +
+C_2}$ for $w$ is defined as
+\[
+ \ket{x + C_2} := \frac{1}{\sqrt{|C_2|}}\sum_{y \in C_2} \ket{x+y}.
+\]
+A parametrized $\CSS_{u,v}(C_1,C_2)$ code defined as follows
+is equivalent to $\CSS(C_1,C_2)$ for $u \in C_2$ and 
+$v \in \{0,1\}^n - C_1$.
+\[
+ \ket{x + C_2} := \frac{1}{\sqrt{|C_2|}}\sum_{y \in C_2}(-1)^{u \cdot y}
+ \ket{x+y+v}.
+\]
+A parametrized $\CSS_{u,v}(C_1,C_2)$ is considered in the discussion of
+equivalence of BB84 and the EDP-based protocol.
+
+\subsection{Entanglement Distillation based on an Error Correcting Code}
+Let $\ket{\beta_{00}} := \frac{\ket{00}+\ket{11}}{\sqrt{2}}$. 
+Two qubits in the state $\ket{\beta_{00}}$ are called an EPR pair.
+Let us consider the following scenario. 
+First, Alice prepares $\ket{\beta_{00}}^{\otimes n} \simeq
+\sum_{i \in \{0,1\}^n}\ket{i}\ket{i} \in \H_A
+\otimes \H_B$.
+%First, Alice prepares $\ket{\beta_{00}}^{\otimes n}$,
+%which is identified with $\sum_{i \in \{0,1\}^n}\ket{i}\ket{i} \in \H_A
+%\otimes \H_B$.
+Second, Alice sends the qubit string whose state is
+in $\H_B$ to Bob through a noisy quantum channel. 
+Alice and Bob want to share the halves of 
+a smaller number $k (\le n)$ of EPR pairs from the given state that
+may be influenced by noise. In fact, this is possible by
+quantum error correction if the number of errors is small enough to
+be corrected.
+
+Let $\{ g_1,...,g_{n-k} \}$ be commutative, independent, and do not
+produce $-I$.
+Then, $C(S)$ with $S := \langle g_1 \otimes I,...,g_{n-k} \otimes I, I
+\otimes g_1$,...,$I \otimes g_{n-k} \rangle$ is a $[2n,2k]$-stabilizer
+code. When the observables $g_1 \otimes I,...,g_{n-k} \otimes I, I
+\otimes g_1$,...,$I \otimes g_{n-k}$ of the state
+$\sum_{i \in \{0,1\}^n}\ket{i}\ket{i}$ are measured, 
+the resulting state is stabilized by 
+$\langle (-1)^{b_1} g_1 \otimes I,..., (-1)^{b_{n-k}}g_{n-k} \otimes I, I
+(-1)^{b'_1}\otimes g_1,...,(-1)^{b'_{n-k}}I \otimes g_{n-k} \rangle$,
+where $b_1,...,b_{n-k}$ and $b'_1,...,b'_{n-k}$ are measurement results
+obtained by Alice and Bob.
+If there is no error,
+$b_i = b'_i$ holds for all $i$ because of the entanglement. In fact,
+the resulting state can be regarded as
+$\ket{\beta_{00}}^{\otimes k}$. If there are some errors,
+$b_i \neq b'_i$ possibly holds for some positions $i$.
+In such a case, if $b_i = 0$ and $b'_i = 1$ for example, then 
+the state after the measurement is stabilized by
+$\langle ..., g_i \otimes I,...,-I \otimes g_i,... \rangle$.
+Alice can inform $b_i$ to Bob so that
+they can modify the state to be stabilized by
+$\langle ..., g_i \otimes I,...,I \otimes g_i,... \rangle$.
+Similarly, by Alice's informing her measurement result to Bob,
+they can correct the difference.
+Let $C(\langle g_1,...,g_{n-k}\rangle)$ 
+corrects $t$ errors. In fact, $\ket{\beta_{00}}^{\otimes k}$ can be
+obtained even if the second halves contain at most $t$ errors.
+
+\section{Quantum Key Distribution Protocols}
+The word BB84 does not identify one unique
+protocol, because there are
+several possible methods for
+\emph{error correction} and \emph{privacy amplification} after
+the quantum communication.
+In this paper, since
+we formalize Shor and Preskill's proof,
+the implementation of BB84 follows their paper \cite{ShorPreskill2000}.
+It employs two classical linear codes $C_1, C_2$ that satisfy
+$C_2 \subseteq C_1$.
+ In this paper, the protocol is slightly modified for simplicity:
+ Alice only generates $2n$ qubits. 
+This modification causes Bob to store qubits in his side,
+ but does not affect the security at all.
+
+\subsection{BB84 (slightly modified)}
+{\bf Assumptions}
+\begin{itemize}
+ \item The length of codeword $n \in \N$ and the error threshold
+       $h \in [0..n]$
+       are defined and known to Alice, Bob, and Eve.
+ \item Classical linear codes $C_1$ and $C_2$ with length $n$ are
+       defined and known to Alice, Bob, and Eve. 
+       $C_1$ and $C_2$ satisfies 
+       $\{0^n\} \subseteq C_2 \subseteq C_1 \subseteq \{0,1\}^n$.
+ \item They use quantum and public classical channels.
+       Eve can interpolate qubits passing
+       through the quantum channel, and listen data passing through the
+       public classical channel.
+\end{itemize}
+{\bf Protocol}\\
+We denote the following protocol as $\mathsf{BB84}^{n,h}_{C_1,C_2}$
+\begin{enumerate}
+ \item Alice generates two random $2n$-bit strings
+       $d_1,...,d_{2n}$ and $b_1,...,b_{2n}$.
+ \item Alice prepares a $2n$-qubit string $q_1,...,q_{2n}$
+       according to the randomness:
+       for each $q_i\,(1 \leq i \leq 2n)$, 
+       Alice prepares the state $\ket{0}$ if $d_i=0, b_i=0$,
+       $\ket{1}$ if $d_i=1, b_i=0$, $\ket{+}$ if $d_i=0,
+       b_i=1$, $\ket{-}$ if $d_i=1, b_i=1$.
+ \item Alice sends $q_1, ..., q_{2n}$ to Bob through the quantum channel.
+ \item Bob receives them and announces Alice
+       that fact.
+ \item Alice announces $b_1, ..., b_{2n}$ using the classical channel.
+ \item For each $i$, Bob measures $q_i$ in $\{\ket{0},\ket{1}\}$
+       basis if $b_i=0$; in $\{\ket{+},\ket{-}\}$ basis
+       if $b_i=1$. Let the results, which
+       are either $0$ or $1$, of the measurement be
+       $c_1,...,c_{2n}$. (If no error occurs,
+       $d_i = c_i$ for all $i$.)
+       Alice randomly chooses $n$ bits from them as
+       check bits. Let the indices of the 
+       check bits be $k_1,...,k_n$. Alice tells Bob
+       $k_1,...,k_n \, (k_1 < ... < k_n)$.
+ \item Bob tells Alice $c_{k_1},...,c_{k_n}$
+       using the classical channel. Alice counts the
+       number of $j$'s with $d_{k_j} \neq c_{k_j}$.
+       If the number is greater than the threshold $h$, 
+       they abort the protocol. 
+ \item Let $x$ be the bitstring with the length $n$ obtained by
+       eliminating
+       $d_{k_1},...,d_{k_n}$ from $d_1,...d_{2n}$.
+       Alice chooses a codeword $u$\,$\in C_1$ at random,
+       and announces $u + x$.
+ \item (Error correction) 
+       Bob lets $y$ be the bitstring with the length $n$
+       obtained by eliminating
+       $c_{k_1},...,c_{k_n}$ from $c_1,...c_{2n}$, and
+       $\tilde w$ be $u + x + y$.
+       (Ideally, the condition $x + y = 0$ is expected to hold.)
+       Bob performs error correction of $\tilde w$ to obtain $w$.
+       If he succeeds to
+       correct errors, $w = u$ holds.
+ \item (Privacy amplification)
+       Alice lets her secret key $k_A$ be $u + C_2$ and
+       Bob lets his secret key $k_B$ be $w + C_2$, where
+       $u + C_2 := u + \sum_{y \in C_2} y$
+\end{enumerate}
+
+BB84 is transformed into the following EDP-based protocol,
+which is a modification of the Lo and Chau's protocol
+\cite{LoChau1999}.
+
+\subsection{The EDP-based Protocol}
+\label{pre:EDPbased}
+{\bf Assumptions}
+\begin{itemize}
+ \item The length of codeword $n \in \N$ and the error threshold 
+       $h \in [0..n]$ are
+       defined and known to Alice, Bob, and Eve.
+ \item Classical linear codes $C_1$ and $C_2$ with length $n$ are
+       defined and known to Alice, Bob, and Eve. 
+       $C_1$ and $C_2$ satisfies 
+       $\{0^n\} \subseteq C_2 \subseteq C_1 \subseteq \{0,1\}^n$.
+       Alice and Bob use the CSS code constructed from 
+       $C_1$ and $C_2$.
+ \item They use quantum, public classical, and a private classical
+       channels. Eve can interpolate qubits passing
+       through the quantum channel, and listen data passing 
+       through the public classical channel.
+\end{itemize}
+{\bf Protocol}\\
+We denote the following protocol as $\mathsf{EDP}^{n,h}_{C_1,C_2}$
+\begin{enumerate}
+\item Alice prepares $2n$ EPR pairs
+      $(\frac{\ket{00}+\ket{11}}{\sqrt{2}})^{\otimes 2n}$ and 
+      a random bitstring $b_{1},...,b_{2n}$. 
+\item For each $i$, Alice performs Hadamard 
+      transformation on the second half of 
+      $i$-th pair of $(\frac{\ket{00}+\ket{11}}{\sqrt{2}})^{\otimes 2n}$
+      if $b_i = 1$.
+      She then sends the second halves of the pairs to Bob.
+\item Bob receives the halves and announces Alice that fact.
+\item Alice announces $b_1,...,b_{2n}$
+      through the public classical channel. For each $i$, Bob
+      performs Hadamard transformations to $i$-th half if
+      $b_i = 1$. 
+\item Alice randomly chooses $n$ pairs from the pairs
+      for error check. Let $k_1,...,k_n$ be the positions.
+      Alice tells Bob $k_1,...,k_n$.
+\item For each $j \in [1..n]$, 
+      Alice and Bob measure their halves of $k_j$-th pair in
+      $\{\ket{0},\ket{1}\}$ basis,
+      and share the measurement results. (If no error occurs, they
+      have the same values as the results.)
+      If the number of errors is greater than the threshold $h$, 
+      they abort the protocol.
+\item (Entanglement Distillation)
+      Let $H(C_1)$ and $H(C_2^\perp)$ be the parity check matrices of 
+      $C_1$ and $C^\perp_2$.
+      Alice and Bob measures the observables
+      which are the generators described by the matrix
+      \[
+      \begin{bmatrix}
+       H(C_2^\perp) & 0\\
+       0 & H(C_1)
+      \end{bmatrix}.
+      \]
+      Alice informs the her measurement results to Bob, and
+      Bob corrects errors using them. 
+      The measurement results corresponding to $H(C_2^\perp)$ and 
+      $H(C_1)$ are sent through the private and public channel respectively.
+      If the error correction succeeds,
+      they share logical $\ket{\beta_{00}}^{\otimes (k_1 - k_2)}$.
+\item Alice and Bob measure their qubits in $\{|0\rangle, |1\rangle\}$
+      basis to obtain shared secret keys $k_A$ and $k_B$.
+\end{enumerate}
+
+\subsection{Security of Quantum Key Distribution}
+We describe here the security criteria introduced in Nielsen and Chuaung's
+book \cite[Chapter 12]{NielsenChuang-Kimura2004}.
+First, we introduce the notions of \emph{negligible} and
+\emph{overwhelming} functions.
+
+\begin{defi}
+ A function $f:\mathbb{N}\rightarrow [0, 1]$ is negligible if
+ for all polynomial $p(\cdot)$, there exists a natural number
+ $N$ such that for all $n \ge N$, $f(n) \le \frac{1}{p(n)}$ holds. 
+ A function $f$ is non-negligible if $f$ is not negligible.
+\end{defi}
+
+\begin{defi}
+ A function $f:\mathbb{N}\rightarrow [0, 1]$ is overwhelming
+ if $1 - f$ is negligible, where $(1 - f)(n) = 1 - f(n)$.
+\end{defi}
+The security criteria is defined as follows.
+\begin{defi}
+ Let $k_A$, $k_B$, and $k_E$ are random variables
+ of Alice's, Bob's, and Eve's keys under the probability 
+ distribution after the execution of a QKD protocol.
+ The protocol is secure with respect to
+ security parameters $s > 0$ and $l > 0$ if
+ Alice and Bob have aborted the protocol or
+ $\Pr(k_A = k_B)$ is overwhelming with respect to $s$
+ and $I(k_A;k_E)$ is negligible with respect to $l$.
+\end{defi}
+
+In the definition above, confidentiality of the secret key is 
+stated as ``$I(k_A;k_E)$ is negligible'' and correctness of
+the keys
+is stated as ``$\Pr(k_A = k_B)$ is overwhelming''.
+However, Eve can block the protocols by jamming the quantum channel
+\cite{Mayers2001}.
+If she intercepts all qubits sent from Alice and performs some operations
+to change their states and resends them to Bob, then
+the errors in check bits will be large and the protocol will be aborted.
+
+\section{Shor and Preskill's Security Proof}
+The flow of Shor and Preskill's security proof \cite{ShorPreskill2000}
+is as follows. First, BB84 is shown to be equivalent for Eve to the
+EDP-based protocol. Concretely, equivalence means that 
+the information obtained by Eve who adopts
+an arbitrary strategy is equal in the both protocols.
+We call this step {\it the transformation step}.
+Next, the security of the EDP-based protocol is proven. This implies
+the security of BB84.
+We call this step {\it the analysis step}.
+We explain the discussions of the two steps briefly.
+
+\subsection{Transformation step}
+The transformation starts at $\mathsf{EDP}^{n,h}_{C_1,C_2}$.
+The first observation is that it does not matter even if
+Alice measures her check bits before she sends the other halves
+of EPR pairs to Bob. It is the same as her choosing $\ket{0}$ or
+$\ket{1}$ at random. Moreover, it does not matter,
+even if she first measures the observables
+for entanglement distillation for her code bits.
+In fact, this is equivalent to sending $k_1 - k_2$ halves
+of EPR pairs encoded by the $\CSS_{u,v}(C_1,C_2)$ code for
+two random parameters $u,v \in \{0,1\}^n$. 
+$u$ and $v$ are determined by the measurement results of the observables 
+corresponding to $H(C_2^\perp)$ and $H(C_1)$.
+Eventually, instead of measuring Alice's halves, she
+can encode a random $k_1 - k_2$ bit string using $\CSS_{u,v}(C_1,C_2)$
+with randomly chosen $u$ and $v$.
+The following $\mathsf{CSS}^{n,h}_{C_1,C_2}$ QKD protocol is then
+obtained, which is an intermediate one in the transformation.
+
+\subsection*{CSS Codes Protocol}
+{\bf Assumptions}\\
+ The same assumptions as the EDP-based protocol are used.\\
+{\bf Protocol}
+\begin{enumerate}
+\item Alice prepares $k_1 - k_2$ code bits, $u$, and $v$ at random.
+      Alice then encodes the code bits using $\CSS_{u,v}(C_1,C_2)$ code.
+      Alice next prepares $n$ random check bits
+      and a random bitstring $b_{1},...,b_{2n}$. 
+      The string of code bits is Alice's secret key.
+\item Alice randomly chooses $n$ out of $2n$ positions,
+      put check bits in the positions, and put code bits in the
+      remaining positions. Let $k_1,...,k_n$ be the check positions.
+\item For each $i$, Alice performs Hadamard 
+      transformation to the qubits in the positions with
+      $b_i = 1$. She then sends the qubits to Bob.
+\item Bob receives the halves and announces Alice that fact.
+\item Alice announces $b_1,...,b_{2n}$
+      through the public classical channel. For each $i$, Bob
+      performs Hadamard transformations to $i$-th half if
+      $b_i = 1$.
+\item Alice tells Bob the positions of check bits $k_1,...,k_n$.
+\item For each $j \in [1..n]$, 
+      Bobs measure qubits in the position of $k_j$ in
+      $\{\ket{0},\ket{1}\}$ basis,
+      and share the measurement results.
+      If the number of errors is greater than the threshold $h$, 
+      they abort the protocol.
+\item Alice tells Bob $u$ through the public classical channel and
+      $v$ through the secret classical channel.
+\item Bob decodes his qubits using $u$ and $v$, and obtains 
+      his secret key.
+\end{enumerate}
+Next, $\mathsf{CSS}^{n,h}_{C_1,C_2}$ is transformed into 
+$\mathsf{BB84}^{n,h}_{C_1,C_2}$. When the coded secret key in $C_1$
+prepared by Alice is $k'_A \in C_1$, the CSS codeword is
+\[
+ \frac{1}{\sqrt{|C_2|}}\sum_{y \in C_2}(-1)^{u \cdot y}
+ \ket{k'_A+y+v}.
+\]
+Since Bob only wants to have $k'_A$, the value of $u$ is not necessary.
+Indeed, he can measure the state in $\{\ket{0}, \ket{1}\}$ basis to have
+the bitstring $k'_A+y_0+v$ for some $y_0 \in C_2$. He subtracts $v$ from
+it to have $k'_A+y_0$. As the secret key is the coset $k'_A + C_2$,
+the value of $y_0$ does not matter. We then assume
+Alice does not send $u$ to Bob. In Bob's view, the state of
+the given qubit is the mixed state
+\[
+ \sum_u (\sum_{y}(-1)^{u \cdot y}
+ \ket{k'_A+y+v})
+ (\sum_{y}(-1)^{u \cdot y}
+ \ket{k'_A+y+v})^\dagger = \sum_{y}\ket{k'_A + y + v}
+ \bra{k'_A + y + v}
+\]
+The state of the right-hand side can be prepared taking $y \in C_2$ at 
+random. Let us focus on Bob's view before obtaining $v$. Recall that
+the value of $k_A'$ is also taken uniformly.
+The state is the mixed state
+\[
+ \sum_{k'_A \in C_1} \sum_{v \in \{0,1\}^n - C_1} \sum_{y \in C_2} 
+  \ket{k'_A + y + v}\bra{k'_A + y + v} = 
+ \sum_{v \in \{0,1\}^n - C_1} \sum_{k'' \in C_1}\ket{k''+ v}\bra{k''+ v}.
+\]
+We observe that $k'' + v$ is uniform random in $\{0,1\}^n$.
+Therefore, the related part of the protocol can be modified as follows.
+\begin{itemize}
+ \item Alice chooses $k'' \in C_1$ and $v \in \{0,1\}^n - C_1$
+       at random, and sends $\ket{k''+v}$ to Bob, performing Hadamard
+       transformation randomly.
+ \item After Hadamard transformation, 
+       Bob measures it and obtains classical bitstring $k'' + v + 
+       \epsilon$, where $\epsilon$ is the error.
+ \item Alice tells $v$ to Bob. Bob obtains $k'' + v + e + v = 
+       k'' + e$. As $k''\in C_1$, Bob performs error correction.
+       If he succeeds, he obtains $k''$. The shared key is the coset of 
+       $k''$ in $C_2$.
+\end{itemize}
+We eventually obtain $\mathsf{BB84}^{n,h}_{C_1,C_2}$ by the transformation.
+
+\subsection{Analysis step}
+A key point is that
+Alice and Bob can accurately judge
+from the error rate obtained at the step 6
+whether the error correction will succeed.
+Since check bits are randomly chosen, the numbers of
+errors contained in the code bits and check bits are close ($\sharp$).
+The numbers of bit and phase flip errors are estimated from the check
+bits with $b_i = 0$ and $b_i = 1$ in the step 2.
+Shor and Preskill uses a lemma given by
+Lo and Chau \cite{LoChau1999}. If Alice and Bob share a 
+state having fidelity $F = 1 - 2^{-s}$
+with ${\ket{\beta_{00}}}^{\otimes {k_1 - k_2}}$, $I(k_A;k_E)
+ \le 2^{-s+\log_2(2(k_1 - k_2)+s+1/\log_e 2) } +
+ 2^{O(-2s)}$ holds. The fidelity is actually estimated from the
+following fact.
+\begin{align*}
+ &F :=  \bra{\beta_{00}}^{\otimes m} \rho' \ket{\beta_{00}}^{\otimes m}
+ \ge \tr{}{\Pi \rho} \mbox{ holds, where}\\
+ &\rho \mbox{ and } \rho' \mbox{ are the states of the pairs before 
+ and after the error correction, and}\\
+ &\Pi \mbox{ is the projector to the space in which 
+ errors in code bits are correctable.}
+\end{align*}
+By ($\sharp$), $\tr{}{\Pi \rho}$ is overwhelming if they have decided
+not to abort the protocol.
+
+Formally, the statement of security of BB84 is as follows.
+\begin{thm}[Shor-Preskill \cite{ShorPreskill2000}]
+ Let $[n,k_1]$-code $C_1$ and $[n,k_2]$-code $C_2$ satisfies
+ $C_2 \subseteq C_1$, and $C_1$ and $C_2^\perp$ correct $t$ errors.
+ $\mathsf{BB84}^{n, h}_{C_1, C_2}$
+ is secure with respect to $n$. Concretely, 
+ \begin{align*}
+ &\Pr(k_A = k_B) \ge 1 - e^{-\frac{1}{4}\epsilon^{2}n / (\delta - 
+ \delta^2)}, \mbox{ where }
+ \delta = \frac{t}{n},  \epsilon = \delta - \frac{h}{n}, \mbox{ and }\\
+ &I(k_A;k_E) \le 2^{-s+\log_2(2(k_1 - k_2)+s+1/\log_e 2) } +
+ 2^{O(-2s)}\mbox{ hold}, \mbox{ where } s \mbox{ satisfies}\\
+ & s \ge \frac{1}{4}\epsilon^{2}n / (\delta - 
+ \delta^2)
+ \end{align*}
+\end{thm}

@@ -1,0 +1,801 @@
+\chapter{Introduction}
+\section{Formal Verification of Cryptographic Protocols}
+\subsection{Background}
+Cryptographic protocols are essential elements of the infrastructure
+to ensure secure communication and information processing. However,
+security proofs of such protocols tend to be complex and
+difficult to verify, which is recognized by researchers 
+\cite{Shoup2004, Halevi2005, Canetti2006}.
+Indeed, flaws of designs \cite{Lowe1996,
+Bleichenbacher1998, Cervesato2008}
+and security proofs \cite{Shoup2001oaep, Galindo2005} of
+cryptographic protocols
+were found years after they had been presented.
+The difficulty of verification of cryptographic protocols 
+is considered to come from the following points \cite{Ouyousuuri2010}.
+\begin{itemize}
+ \item To define and formulate security properties, which depend on 
+       the functionality of each protocol, is difficult.
+       Indeed, the definitions are often reconsidered
+       \cite{GoldwasserMicali1984,
+       DolevDworkNaor2003, RackoffSimon1992,
+       Benalohetal1994, Juelsetal2005}.
+ \item Execution models of cryptographic protocols
+       are complex. In general, principals in a cryptographic
+       protocol, including adversaries,
+       run in parallel. Since each principal runs
+       nondeterministically and probabilistically,
+       execution models and security properties must be
+       defined on the basis of parallelism, nondeterminacy, and
+       probability.
+ \item Methods to prove that cryptographic protocols satisfy defined
+       security properties are not self-evident.
+       Security proofs performed on the basis of such execution
+       models tend to be quite complex.
+\end{itemize}
+{\it Formal methods} have been applied
+to model, analyze, and verify cryptographic protocols
+\cite{Blanchet2001, Armando2005, Blanchet2008cryptoverif,
+Barthe2009certi, Barthe2011}.
+They are based on formal frameworks, including formal
+languages and systems to prove security properties such as
+inference rules.
+The languages are used to formalize cryptographic protocols and
+security properties, and the inference rules are used to perform 
+formal proofs.
+
+Advantages of formal methods are as follows.
+\begin{itemize}
+ \item The use of formal languages precisely prevents ambiguity.
+       Although mathematical proofs in natural languages are rigorous,
+       ones in formal languages can be 
+       more in terms of both description and interpretation,
+       because the syntax and
+       semantics of them are defined mathematically.
+ \item That all inferences in a proof obey
+       pre-defined inference rules is made to be explicit.
+       On the other hand in ordinary proofs,
+       it is not always the case. This is possibly because
+       some inferences are apparently too obvious to write down
+       explicitly. However, writing such inferences is still valuable
+       when we put priority on rigor.
+ \item Verification and proof can be partially automated.
+       It reduces human costs as well as prevents errors.
+       Parts that are automated depend on software tools.
+       We introduce some of the tools in the next subsection.
+\end{itemize}
+
+\subsection{Existing Verification Tools}
+\label{intro:tools}
+$\mathsf{CertiCrypt}$ \cite{Barthe2009certi}
+is a framework where we interactively construct
+game-based cryptographic proofs in a proof assistant
+$\mathsf{Coq}$ \cite{coq2010}. It has been 
+successfully applied to
+verify the security of prominent cryptographic protocols such as 
+FDH \cite{Zanella2009FDH} and OAEP \cite{Barthe2011OAEP}.
+The effort one needs to
+build the machine-checked proofs in $\mathsf{CertiCrypt}$ 
+is thought to be more than moderate \cite{Barthe2011}, 
+contrasted to the high guarantees
+of security. In spite of the effort to construct the proofs,
+ones who read them have
+only to understand the correctness of the formalization of
+the target cryptographic protocol and the statement of the security to
+achieve.
+$\mathsf{EasyCrypt}$ \cite{Barthe2011} further
+reduces users' effort. It generates
+a whole machine-checked proof from {\it proof sketches}, which are
+representation of essence of a security proof. It was 
+applied to verify the security of Cramer-Shoup public key encryption
+scheme \cite{CramerShoup1998}, to which $\mathsf{CertiCrypt}$ had
+never been applied. Those approaches are
+computer-aided verification of cryptographic {\it proofs},
+ideas of which are in general considered by men.
+
+$\mathsf{AVISPA}$ \cite{Armando2005} and 
+$\mathsf{ProVerif}$ \cite{Blanchet2001} are frameworks to analyze
+security
+protocols in abstract models, where cryptographic primitives are 
+idealized. For example, ciphertexts encrypted using a public key are
+decrypted only using the secret key which corresponds
+to the public key. In $\mathsf{AVISPA}$ framework, a protocol designer
+describe a protocol paired with expected security properties
+in a formal language HLPSL. The scripts are 
+translated into the intermediate format and passed
+to the backends including model checkers. One of them for example
+tries to find attacks by
+exploring the transition system specified by the intermediate format.
+Those approaches use a computer to exhaust execution states of
+protocols, whose number is possibly too large to do by hand,
+rather than obtaining cryptographic proofs.
+
+% Program transformation techniques is CryptoVerif
+% \cite{Blanchet2008cryptoverif}.
+% For another example,
+% as formal languages can be interpreted by a computer,
+% protocols can be simulated as programs or their execution states
+% can be exhausted \cite{Armando2005, Blanchet2001}.***
+% ***
+
+\section{Formal Methods for Quantum Cryptography}
+We may call {\it classical} cryptography, formal framework, process
+calculus, and so on for {\it non-quantum} ones.
+
+\subsection{Security of Quantum Key Distribution Protocols}
+Security proofs are also complex in quantum cryptography,
+where we must also consider attacks using entanglements.
+BB84 \cite{BennetBrassard1984}
+is a prominent quantum key distribution (QKD)
+protocol, which allows two remote principals to share a secret
+key. Let us call the two principals and an adversary Alice, Bob, and Eve 
+respectively. A key of the security of BB84 and other QKD protocols
+\cite{LoChau1999, TamakiKoashiImoto2003} is 
+that Alice and Bob can estimate the amount of information leakage to
+Eve. If Eve tries to obtain
+information from quantum systems passing through a quantum channel,
+she must measure some physical values of them.
+It possibly disturbs the states of quantum
+systems. To check the disturbance, Alice sends to Bob 
+additional quantum systems
+other than those which are sources of the shared secret key.
+If the information leakage is judged to be too large, they
+abort the protocol.
+BB84 provides {\it unconditional security} that
+the mutual information of Alice's and Eve's key is negligible
+with respect to the number of quantum bits if Alice and Bob have not
+aborted the protocol. The advantage of QKD protocols is that
+the security does not depend on adversary's computational resources, 
+while the security of classical key exchange protocols
+are ensured on the basis of
+conjectured difficulty of computing certain functions
+\cite{DiffieHellman1976}.
+
+The first security proof of BB84 is presented by Mayers 
+\cite{Mayers1998}. It is about 50 pages long and complex.
+Lo and Chau proposed another QKD protocol \cite{LoChau1999} whose
+security proof is simple. It is based
+on an entanglement distillation protocol (EDP).
+It has the drawback that it requires quantum
+computers, while BB84 only needs apparatus for state preparation and
+quantum measurement.
+Shor and Preskill presented a simple proof of BB84
+\cite{ShorPreskill2000}. They showed that the security of BB84 is
+equivalent to that of a modified version of Lo and Chau's protocol
+(modified Lo-Chau protocol, the EDP-based protocol) \cite{LoChau1999},
+whose security proof is also simple.
+Our target of formal verification in this thesis 
+is Shor and Preskill's proof.
+
+\subsection{Motivation to Apply Formal Methods to Quantum\\
+Cryptographic Protocols}
+QKD protocols have advantage not to depend on conjectured difficulty
+of computing certain functions.
+They are ones of the closest application to practice in the quantum
+information field.
+Actually, several companies such as Id Quantique,
+MagiQtechnologies, Toshiba, and NEC are developing 
+commercial quantum cryptographic systems.
+It is also possible that more complex quantum protocols
+be presented in the future.
+Therefore, it is important to develop 
+formal frameworks to verify quantum protocols'
+security and also make the security proofs machine-checkable.
+
+\subsection{Process Calculi for Quantum Protocols}
+Process calculi \cite{Milner1999, AbadiFournet2001, 
+Blanchet2008cryptoverif}
+are formal frameworks that are
+suitable to verify properties of parallel systems.
+They have successfully applied to verification of a number of
+classical cryptographic protocols such as Diffie-Hellman
+key agreement \cite{AbadiFournet2001}, 
+Needham Shoroeder shared and public key protocols
+\cite{Blanchet2008cryptoverif},
+FDH \cite{Blanchet2006FDH}, and Kerberos \cite{Blanchet2008Kerberos}.
+To clone the success in quantum information fields,
+several quantum process calculi have been proposed
+\cite{NagarajanPapanikolaouBowenGay2005, Lalire2006, Adao2007,
+FengDuanYing2011}. Feng et al. defined a process calculus qCCS
+\cite{FengDuanJiYing2007, Ying2009, FengDuanYing2011, DengFeng2012,
+FengDengYing2012}.
+In qCCS, a quantum protocol is formalized as a
+configuration $\con{P}{\rho}$\footnote{In \cite{FengDuanJiYing2007,
+Ying2009, FengDuanYing2011, DengFeng2012,
+FengDengYing2012}, a configuration is written of the form
+$\langle P, \rho \rangle$ using angle brackets. In this thesis,
+we write $\con{P}{\rho}$ since we frequently write density operators using
+bra-ket notation.}.
+which is a pair of a process $P$ and a collective quantum mixed state
+$\rho$
+that is referred by the variables in $P$.
+Gay et al. defined a quantum process calculus CQP
+\cite{NagarajanPapanikolaouBowenGay2005, Davidson-etal2012}, which is
+based on pi-calculus. In the later version of
+CQP \cite{Davidson-etal2012}, a configuration is defined as a triple
+$(\sigma;\tilde q;P)$ consisting of a collective
+quantum pure state $\sigma$,
+an indicator of $P$'s ownership of variables $\tilde q$,
+and a process $P$.
+
+An important notion in process calculi is 
+{\it weak bisimulation} relation on processes
+\cite{Milner1999, AbadiFournet2001}.
+Processes in weak bisimulation relation behave equivalently:
+they perform identical actions that are
+visible from the outside up to invisible ones.
+For example, visible actions are communications of processes
+via public channels, and invisible ones are 
+communications via private channels.
+Usage of the relation is for example as follows.
+If we formalize some protocol and its 
+specification as processes and prove that they 
+are in bisimulation relation,
+then we have proved the protocol satisfies the specification.
+
+In qCCS, weak bisimulation relation $\approx$
+on configurations is defined.
+Their definition is successful in that 
+the relation is closed by application of parallel composition
+of processes: if $\con{P}{\rho} \approx \con{Q}{\sigma}$ holds,
+then $\con{P||R}{\rho} \approx \con{Q||R}{\sigma}$ holds for all
+process $R$ with which $P||R$ and $Q||R$ are defined.
+$P||R$ means that $P$ and $R$ run in parallel.
+This property of $\approx$ is called congruence.
+Similarly in CQP, weak bisimulation relation is defined and proven to
+be congruent. The congruence property is significant when we account on 
+compositional behavioural equivalence.
+% The facts that the weak bisimulation relations are congruent
+% support the claim that the definitions capture the intuition of
+% behavioural equivalence. It is also useful practically.
+
+\subsubsection{Application of Quantum Process Calculi}
+In qCCS, quantum teleportation, super dense coding protocols
+\cite{FengDuanYing2011}, and simplified version of BB84
+\cite{DengFeng2012} are formalized. That they satisfy their
+specifications is also verified using weak bisimulation relation.
+In CQP, quantum coin-flipping game \cite{Meyer1999},
+quantum teleportation protocol,
+and quantum bit-commitment protocol
+are formalized and their execution
+are modeled \cite{NagarajanPapanikolaouBowenGay2005}.
+Three fold repetition quantum error correcting code and
+its specification are formalized, and they are proven to
+be weakly bisimilar \cite{Davidson-etal2012}.
+
+To extend application of process calculi to security proofs, we
+applied qCCS to Shor and Preskill's
+security proof of BB84 \cite{ShorPreskill2000}.
+We previously formalized BB84 and the modified Lo and Chau's protocol
+as configurations of qCCS and proved their bisimilarity by hand
+\cite{Kubota2012}.
+
+\section{Contributions}
+We addressed the following three limitations of previous work.
+\begin{itemize}
+ \item Automated verification techniques have never been applied to
+       verify that a quantum cryptographic protocol satisfies
+       certain security criteria that are accepted in the field of
+       quantum cryptography.
+       In previous work \cite{NagarajanPapanikolaouBowenGay2005},
+       security of BB84 was analyzed
+       automatically but the strategy of the adversary Eve was
+       limited: she only intercepts each qubit through the
+       quantum channel, chooses either $\{\ket{0},\ket{1}\}$ or 
+       $\{\ket{+},\ket{-}\}$ basis randomly,
+       measures the qubit in the basis, and resends it through the
+       quantum channel. She thus cannot make her qubits entangled with
+       Bob's.
+       On the other hand, Eve is assumed to perform arbitrary
+       quantum operations in quantum cryptographic proofs
+       \cite{Mayers1998, ShorPreskill2000}.
+ \item Verification of weak bisimilarity in 
+       any quantum process calculi
+       has not been automated although by-hand verification of it
+       is often hard when objective configurations have
+       many long branches in their transition trees.
+ \item Methodology to prove quantum cryptographic security using
+       process calculi has not been established yet
+       while considering weak bisimilarity is useful to verify
+       equivalence of protocols. As for
+       Shor and Preskill's security proof, equivalence of
+       BB84 and modified Lo and Chau's protocol is stated as
+       weak bisimilarity of configurations formalizing them.
+       However, the way to state the security of
+       the latter has not been obvious.
+\end{itemize}
+Specifically, the contributions of this thesis are as follows.
+\subsection{A Software Tool to Verify Weak Bisimilarity of qCCS Configurations}
+We implemented a software tool, which
+we call {\it Verifier1}, that formally verifies
+weak bisimilarity of qCCS configurations
+without recursive structures.
+The overview is as follows.
+ \begin{itemize}
+  \item Verifier1 adopts a simplified formal framework based on qCCS,
+	which we may call {\it nondeterministic qCCS}.
+	\begin{enumerate}
+	 \item In the original syntax, there are constructors of a quantum
+	       measurement $M[\tilde q;x].P$
+	       and application of a quantum operator $\mathit{op}[\tilde
+	       q].P$. Since we can also formalize
+	       a measurement as a special quantum operation,
+	       we always have two ways to
+	       formalize one. We considered criteria
+	       to select one way from the two, which is
+	       reported in \cite{Kubota2012}. 
+	       We simplified the syntax reflecting the
+	       criteria so that
+	       a user who verifies equivalence of
+	       quantum cryptographic protocols using weak bisimulation
+	       can select the
+	       feasible way to formalize a quantum measurement.
+	 \item qCCS's transition system
+	       is probabilistic
+	       and nondeterministic. A configuration is of the form
+	       $\con{P}{\rho}$ and $\tr{}{\rho} = 1$. Suppose a 
+	       probability-weighted configuration $\frac{1}{2} \bullet
+	       \con{P}{\rho}$, which is interpreted to that we have
+	       the configuration $\con{P}{\rho}$ with probability
+	       $\frac{1}{2}$.
+	       Instead of considering a
+	       probability-weighted configuration, we
+	       allow $\rho$ satisfying $0 < \tr{}{\rho} \le
+	       1$ and
+	       interpret $\tr{}{\rho}$ as the probability to reach the
+	       configuration. For instance, we consider
+	       $\con{P}{\frac{1}{2}\rho}$ in
+	       the simplified transition system instead of $\frac{1}{2}
+	       \bullet \con{P}{\rho}$ in the original one.
+	       The simplified one is only nondeterministic.
+	       To verify behavioural equivalence of
+	       configurations has become easier whether
+	       it is done by hand or tool.
+	\end{enumerate}
+  \item Verifier1 handles quantum states symbolically and
+	it can be applied to security proofs.
+	In security proofs,
+	the dimensions of quantum states
+	are generally unfixed, because they
+	depend on security parameters such as the number of
+	qubits which Alice sends to Bob. 
+	Therefore, the way to represent states in
+	a software tool is not self-evident.
+	In our verifier, security parameters and quantum
+	states are represented as symbols.
+	A user is
+	supposed to define in Verifier1 symbolic 
+	representations of quantum states and 
+	equations on them. To compare symbolic representations,
+	Verifier1 applies such user-defined
+	equations to them and simplifies them.
+  \item Although Verifier1 adopts the simplified
+	syntax and operational semantics, it is sound with respect
+	to qCCS. If Verifier1 returns $\mathit{true}$
+	with two configurations and a set of
+	valid user-defined equations as input,
+	then the two converted configurations
+	in qCCS are weakly bisimilar.
+ \end{itemize}
+The design of Verifier1 and the proof of
+soundness are described in Chapter \ref{symqccs}.
+
+\subsection{Approximate Bisimulation for Quantum
+Processes}
+In formal verification using process calculi,
+notions of {\it approximate bisimulation} relation are useful:
+configurations in the relation behave equivalently up to
+negligible probability. This is a possible usage of the notions.
+To evaluate security of a system, we first consider an ideal
+system that is always secure. We next prove the system and
+the ideal one are approximately bisimilar. 
+This proves that the system is secure except for
+negligible probability.
+
+We defined two kinds of approximate bisimulation relations
+in our formal framework (nondeterministic qCCS),
+and studied properties of them.
+As described in the next subsection, we applied one of the notion
+to verify formally the last step of Shor and Preskill's security proof.
+
+Originally, $\con{P}{\rho} \approx \con{Q}{\sigma}$ means 
+  \begin{itemize}
+   \item $\tr{\qv{P}}{\rho} = \tr{\qv{Q}}{\sigma}$, and
+   \item whenever one of $\con{P}{\rho}$ or $\con{Q}{\sigma}$
+	 can perform an action,
+	 the other can perform the same action up to invisible ones.
+  \end{itemize}
+The set of quantum variables occurring in $P$ 
+is denoted by $\qv{P}$. A state space corresponds to each quantum variable.
+When the quantum state of all quantum variables is $\rho$, 
+$\tr{\qv{P}}{\rho}$ is the quantum state that one who does not have
+variables in $\qv{P}$ can access.
+
+We relaxed the conditions up to gaps of probabilities of
+configurations' performing actions and {\it trace distance}
+$d(\tr{\qv{P}}{\rho}, \tr{\qv{Q}}{\sigma})$.
+When we measure an arbitrary observable (a physical value)
+of quantum states with small trace distance,
+we obtain identical results with close probability.
+\begin{enumerate}
+ \item  The first relation $\sim_{\zeta, \eta}$ is
+	parametrized with $\zeta, \eta$ with $0 \le 
+	\eta, \zeta \le 1$. Roughly speaking,
+	$\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$
+	means
+	\begin{itemize}
+	 \item $d(\tr{\qv{P}}{\rho}, \tr{\qv{Q}}{\sigma}) \le
+	       \zeta$, and
+	 \item whenever one of $\con{P}{\rho}$ or $\con{Q}{\sigma}$
+	       can perform an action with probability greater than
+	       $\eta$,
+	       the other can perform the same action up to
+	       invisible ones.
+	\end{itemize}
+	The relation is not transitive but
+	if $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$
+	and $\con{Q}{\sigma} \sim_{\zeta', \eta'} \con{R}{\theta}$
+	hold, then $\con{P}{\rho}
+	\sim_{\zeta + \zeta', \max\{\eta, \eta'\} + 2(\zeta + \zeta')}
+	\con{Q}{\sigma}$
+	holds.
+	We proved that if $\con{P}{\rho} \sim_{\zeta, \eta}
+	\con{Q}{\sigma}$, then 
+	$\con{P||R}{\rho} \sim_{\zeta, \eta} \con{Q||R}{\sigma}$
+	for an arbitrary process $R$,
+	which suggests sanity of the
+	definition.
+ \item The second relation $\sim$ is defined when
+       quantum states depend on security
+       parameters, with which the notion of {\it negligibility}
+       makes sense. Roughly speaking,
+       $\con{P}{\rho} \sim \con{Q}{\sigma}$ means
+       \begin{itemize}
+	\item $d(\tr{\qv{P}}{\rho}, \tr{\qv{Q}}{\sigma})$
+	      is negligible, and
+	\item whenever one of $\con{P}{\rho}$ or $\con{Q}{\sigma}$
+	      can perform an action with
+	      non-negligible probability,
+	      the other can perform the same action up to invisible
+	      ones.
+       \end{itemize}
+       The relation is transitive.
+       We proved that if $\con{P}{\rho} \sim
+       \con{Q}{\sigma}$ holds, then \\
+       $\con{P||R}{\rho} \sim \con{Q||R}{\sigma}$ holds
+       for an arbitrary process $R$. 
+       Eventually, the relation $\sim$ is an equivalence 
+       relation and closed under
+       parallel composition, and thus we say it is {\it congruent}.
+       The property suggests sanity of the definition as
+       well as feasibility in practice.
+\end{enumerate}
+       We finally extended Verifier1
+       to verify a subset of the second approximate bisimulation
+       relation. The extended verifier is called {\it Verifier2}.
+       It uses
+       user-defined rewriting rules of the form $\rho = \sigma$
+       for symbolic representations $\rho, \sigma$ of quantum states.
+       Each rule is expected to satisfy that
+       $d(\braw{\rho}, \braw{\sigma})$ is negligible, where
+       $\braw{\rho}$ is the quantum state represented by the symbol 
+       $\rho$. The definitions of approximate bisimulation
+       relations, the proofs of their properties, and
+       the extension of Verifier1 are described in
+       Chapter \ref{prob_bisim}.
+\subsection{Application of the Verifiers to Shor and Preskill's 
+Security Proof of BB84}
+We applied Verifier1 and Verifier2 to Shor and Preskill's
+security proof of BB84 \cite{ShorPreskill2000}.
+Our formal verification consists of the following two steps.
+ \begin{itemize}
+  \item In the first step of Shor and Preskill's security proof,
+	equivalence of BB84 and an EDP-based protocol is proven.
+	The latter protocol is a modification of Lo and Chau's
+	protocol \cite{LoChau1999}.
+	We first verified the equivalence using Verifier1.
+	We formalized them
+	as configurations
+	based on our previous work
+	\cite{Kubota2012}.
+	We then defined equations to verify
+	equivalence of the two protocols.
+	They are obtained from properties of
+	error-correcting codes
+	discussed in the original proof \cite{ShorPreskill2000}
+	and basic facts about measurement of halves of EPR pairs.
+	The input is the equations and configurations of
+	BB84 and of the EDP-based protocol.
+	Verifier1 returns $\mathit{true}$ with the input.
+  \item Second, we verified the security of the
+	EDP-based protocol.
+	We defined an {\it ideal} protocol, where Alice and Bob
+	can create a shared key leaking no information to Eve.
+	We formalized it as a configuration in the extended
+	verifier. 
+	We then defined rewriting rules to verify
+	approximate equivalence of the
+	two protocols. They
+	are obtained from the second step of the 
+	original proof \cite{ShorPreskill2000}
+	to show the security of the EDP-based protocol.
+	The input is the rewriting rules and configurations of
+	the EDP-based protocol and of the ideal protocol.
+	Verifier1 returns $\mathit{true}$ with the input.
+ \end{itemize}
+Formalization techniques, scripts, and experimental results
+are described in Chapter \ref{formaliz}.
+The package of Verifier1 and Verifier2 is available from\\
+\texttt{http://hagi.is.s.u-tokyo.ac.jp/\~{}tk/qccs}\texttt{verifier.tar.gz}.
+It includes a user manual and example scripts in the directories
+\texttt{doc} and \texttt{scripts}.
+
+\section{Related Work}
+\subsection{Formal Approaches to Security of BB84}
+\subsubsection{Automated Analysis using Probabilistic Model Checking}
+Model checking methods have been applied to analyze security 
+of QKD protocols.
+Nagarajan et al.\ applied the probabilistic model checker
+PRISM 2.0 \cite{KwiatkowskaNormanParker2004}
+to analyze BB84 \cite{NagarajanPapanikolaouBowenGay2005}
+by calculating
+the probability of eavesdropping detection. They assumed a
+restricted adversary who only performs intercept and resend attack
+through the noiseless quantum channel, and left a full security 
+proof in a formal framework for future work.
+In contrast, we target 
+formalization of security proofs such as Shor and Preskill's
+\cite{ShorPreskill2000}, where the quantum channel is assumed to be
+noisy and Eve performs arbitrary quantum operations.
+
+\subsubsection{Verification Using a Sequential Quantum Programming Language}
+In our previous work \cite{KubotaKakutaniKatoKawono2011}, we applied
+program transformation methods and Hoare logic to
+Shor and Preskill's security proof of BB84.
+We formalized BB84 and the EDP-based protocol using a
+Selinger's QPL \cite{Selinger2004}.
+We then formalized their inferences
+as rewriting rules of programs. Soundness of each rule was
+proved on the basis of the semantics of QPL.
+BB84 is transformed to the EDP-based protocol by the rewriting by
+the rules.
+We finally verified the security of the EDP-based protocol formally
+using Kakutani's quantum Hoare logic \cite{Kakutani2009}.
+
+When we formally verify cryptographic protocols,
+an advantage of process calculi to sequential programs is that
+communications and nondeterminacy are explicitly written.
+
+\subsection{Quantum Process Calculi}
+\subsubsection{CQP}
+In CQP's transition system, a state is a triple called a configuration
+that consists of a map from a quantum variable to a quantum pure
+state, a set of quantum variables, and a process. 
+A configuration transits its state interacting with the outsider
+similarly to qCCS.
+An example of the configuration is as follows.
+\[
+A \defequiv ([q,r \mapsto
+ \frac{1}{\sqrt{2}}(\ket{00}+\ket{11})];r;d![\mathsf{measure}~r].Q)
+\]
+There are quantum variables $q$ and $r$ in this configuration.
+The first component means the state of 2-qubit system indicated by 
+the variables $q$ and $r$ is $\frac{1}{\sqrt{2}}(\ket{00}+\ket{11})$.
+The second component $r$ means that the process 
+$d![\mathsf{measure}~r].Q$ has
+access to $r$, but not to $q$. Instead, the outsider has access to $q$.
+The third component $d![\mathsf{measure}~r].Q$ is a process
+that sends the measurement result (i.e. classical data) through the 
+channel $d$, and executes $Q$.
+
+The first state transition of the above configuration is as follows.
+The right-hand side is called a mixed configuration.
+\[
+ A
+ \xrightarrow{\tau}
+ \frac{1}{2}([q,r \mapsto
+ \ket{00}];r; d![0].Q) \oplus
+ \frac{1}{2}([q,r \mapsto
+ \ket{11}];r; d![1].Q) \defequiv B
+\]
+Next, it sends the value $0$ or $1$, which means
+that it reveals the measurement result to the outsider.
+A probability distribution of configurations,
+which is called an intermediate configuration, is as follows.
+\[
+ B
+ \xrightarrow{\tau}
+ \frac{1}{2}([q,r \mapsto
+ \ket{00}];r; d![0].Q) \boxplus
+ \frac{1}{2}([q,r \mapsto
+ \ket{11}];r; d![1].Q) \defequiv C
+\]
+The intermediate configuration probabilistically
+performs one of 
+the following transitions to become a configuration.
+\begin{align*}
+ & C
+ \xgizarrow{\frac{1}{2}}
+ ([q,r \mapsto
+ \ket{00}];r; d![0].Q)
+&&C
+ \xgizarrow{\frac{1}{2}}
+ ([q,r \mapsto
+ \ket{11}];r; d![1].Q)
+\end{align*}
+
+CQP is a successful formal framework with
+the definition of congruent bisimulation.
+It is future work to study automated verification of
+security proofs in CQP.
+%  but
+% there are two points that we did not adopt CQP to formalize
+% QKD protocols.
+% \begin{enumerate}
+%  \item We thought the constructors of CQP, unitary transformation
+%        and measurement, are too primitive for our purpose.
+%        As we can see in Davidson's application \cite{Davidson-etal2012},
+%        to perform a randomly chosen unitary transformation,
+%        the source of randomness must be described as a
+%        process. Prepared randomnesses are passed
+%        to the process that chooses the unitary transformation.
+%        When verifying quantum error correcting codes,
+%        it is quite valuable to trace all cases of executions for
+%        each concrete value of randomness.
+%        For our targets of formalization,
+%        concrete values of randomnesses are not
+%        essential and actually cannot be fixed, because the lengths
+%        of the randomnesses depend on the security parameter.
+%        Therefore, we decided to represent probabilistic
+%        local quantum operations as TPCP maps in bulk.
+%  \item We did not come up with an efficient way to automate
+%        the verification of bisimilarity of the CQP configurations.
+%        To be a bismulation relation, a relation on
+%        CQP configurations is required to be an equivalence relation.
+%        If it were required to be only symmetric, 
+%        we could design a verfication algorithm that
+%        runs symmetrically with respect to the arguments,
+%        which might be two configurations to judge the bisimilarity.
+% \end{enumerate}
+
+\subsubsection{Symbolic Bisimulation in qCCS}
+The authors of qCCS presented the notion of symbolic
+bisimulation for quantum processes \cite{FengDengYing2012}.
+A purpose is to
+verify bisimilarity algorithmically. They proved the
+strong symbolic bisimilarity (internal actions must be simulated) is
+equivalent to the strong open
+bisimilarity, and actually presented an algorithm to verify symbolic ground
+bisimilarity (outsiders do not perform quantum operations adaptively).
+ Since our purpose is to apply a process calculus to security proofs
+ where adversarial interference must be taken into account, we 
+implemented a tool that verifies weak open bisimilarity
+on the basis of the previous version of qCCS \cite{DengFeng2012}.
+
+\subsection{Approximate Bisimulation}
+\subsubsection{Approximate Bisimulation in qCCS}
+The authors of qCCS also presented the notion of approximate
+strong bisimulation in an earlier version of qCCS \cite{Ying2009}.
+The notion is different from ours in this thesis.
+In the framework, the transitions of TPCP map application are
+defined to be {\it labeled}, namely, not $\tau$ transitions.
+Approximate strong bisimulation identifies transitions of TPCP maps
+whose {\it diamond distance} is not grater than some parameter.
+While this identification is significant,
+we did not directly apply this framework to our verification targets.
+The first reason was only {\it strong} bisimulation was proposed,
+while the protocols that we attempted to verify formally were thought
+to be weakly bisimilar but not to be strongly bisimilar.
+The second reason was that there was no conditional branch in the syntax,
+while aborting of an execution of a QKD protocol must be formalized.
+
+\subsubsection{Approximate Bisimulation in Classical Process Calculi}
+Ying et al. introduced a notion of approximate bisimulation in
+classical process calculi \cite{Ying2000} with labeled transition
+systems. In their framework, the set of \emph{actions} is a metric space.
+They applied the notion to verify formally 
+approximate correctness of real time
+systems such as real time ACP. Our notion of approximate bisimulation is
+independent of theirs: distance of quantum states is considered but
+that of actions is not.
+
+\subsubsection{Approximate Bisimulation in Labeled Transition Systems
+   with Observations}
+Girard et al. defined a notion of approximate bisimulation in \emph{labeled
+transition systems with observations} \cite{Girard2005}.
+In a labeled transition system with observations, there is an
+\emph{observation map}
+that carries a state $q$ to an \emph{observation}  $\langle\!\langle q
+\rangle\!\rangle$, and the set of observations $\Pi$ is a metric space.
+The notion of approximate bisimulation is defined based on
+the distance $d_{\Pi}(\langle\!\langle q \rangle\!\rangle,
+\langle\!\langle q' \rangle\!\rangle)$.
+Our notion of approximate bisimulation appears to be similar to
+theirs when we substitute trace distance for $d_{\Pi}$ and
+partial trace for $\langle\!\langle \cdot \rangle\!\rangle$.
+There are three different points between our work and theirs.
+First, we considred \emph{weak} bisimulation relation and proved
+that it is closed by parallel composition of processes,
+which are important peculiarly in process calculi.
+Second, since our formal framework involves probability,
+transitions with probability less than some threshold $\eta$
+(respectively, transitions with negligible probability) is ignored in our
+notion. Third, since the relation $\sim$ incorporates with 
+the notion of negligibility, it is transitive.
+
+\subsection{Automated Verification Tool for Classical Protocols}
+$\mathsf{CryptoVerif}$ \cite{Blanchet2008cryptoverif} is a software tool
+to verify security of
+\emph{classical} protocols. It has been applied to
+both high-level protocols \cite{Blanchet2008Kerberos, Blanchet2012oeke} 
+that employ cryptographic primitives and to
+cryptographic schemes \cite{Blanchet2006FDH} that are possibly be
+used as primitives.
+There are two features of $\mathsf{CryptoVerif}$ that are 
+related to our verifiers: it is designed on the basis of a probabilistic
+process calculus, and it incorporates with negligibility.
+Of course, it cannot be directly applied to verify security of QKD
+protocols. In $\mathsf{CryptoVerif}$'s framework,
+all data are classical and
+a process, which may be an adversary,
+is bounded in polynomial time, while an adversary against a QKD protocol
+is not. 
+
+As a proof technique, $\mathsf{CryptoVerif}$ applies 
+\emph{observational equivalence} of processes.
+Let $\Pr(P \rightsquigarrow a)$
+be the probability
+that the process $P$ transits to a process that is ready to send some
+data through the channel $a$.
+Two processes $P$ and $Q$ are observationally equivalent, written
+$P \cong Q$ here, if
+$$
+|\Pr(C[P] \rightsquigarrow a) - \Pr(C[Q] \rightsquigarrow a)|
+$$
+is negligible for all evaluation context\footnote{An evaluation context
+is composed by a hole, channel restrictions, and
+parallel compositions.}
+$C[\_]$ that runs in polynomial time
+and channel $a$ that is
+not restricted. 
+The relation $\cong$ is \emph{congruent} by the definition,
+namely, if $P \cong Q$ holds, then $C[P] \cong C[Q]$ holds for all
+evaluation context $C[\_]$ running in polynomial time.
+When we consider $C[\_]$ as a polynomial time
+adversary that runs in parallel and interacts with the protocol $P$ or
+$Q$,
+the observational equivalence of them is intuitively interpreted
+as indistinguishability of the protocols from an adversary.
+
+In cryptographic proofs, security of a high-level protocol
+is reduced to security of the employed cryptographic primitives.
+Similarly, security of a cryptographic scheme is reduced to 
+assumed difficulty of computing certain functions.
+In $\mathsf{CryptoVerif}$, a user formalizes such assumptions as
+observational equivalence of processes.
+$\mathsf{CryptoVerif}$ uses such user-defined equivalences as
+rewriting rules:
+if a target process $P$ is of the form $C[X]$ and there is a user
+defined
+equivalence $X \cong Y$, then it is rewritten to $C[Y]$.
+By congruence, $P \cong C[Y]$ holds.
+Given a process formalizing a target protocol and 
+user-defined observational equivalences, 
+$\mathsf{CryptoVerif}$
+rewrites the process repeatedly until it becomes a process
+that is obviously secure.
+
+On the other hand, our tools verify bisimilarity by
+tracing execution paths of configurations, not by
+rewriting processes.
+Fortunately, the bisimulation in qCCS is congruent, and
+it is thus possible that a verification tool is
+designed to verify bisimilarity by rewriting.
+With such a verifier, bisimilarity of 
+big-sized configurations is derived from that of some small-sized ones.
+Especially in proofs of security of QKD protocols,
+difficulty of computing certain functions is not assumed.
+Therefore, even if a verifier conducts rewriting,
+we possibly need to prove bisimilarity of
+such small-sized configurations unlike
+verification using $\mathsf{CryptoVerif}$.

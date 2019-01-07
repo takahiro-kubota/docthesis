@@ -1,0 +1,1315 @@
+\chapter{Formal Verification of Quantum Cryptographic Protocols Using
+the Verifiers}
+\label{formaliz}
+\section{Overview}
+We implemented a software tool to verify weak bisimilarity 
+(being in the relation $\approx$) of
+configurations of the original qCCS \cite{DengFeng2012}.
+In Chapter \ref{symqccs}, we described
+the design and soundness of the verifier, which
+we call Verifier1.
+In Chapter \ref{prob_bisim},
+we defined the approximate bisimulation relation $\sim$ and
+extended the verifier to verify approximate
+bisimilarity (being in the relation $\sim$).
+We call the extended one Verifier2.
+We summarized the difference
+of them in Table \ref{fml:differofverifers}.
+\begin{table}[htb]
+  \begin{tabular}{|l|c|c|} \hline
+   ~ & Verifier1 & Verifier2 \\ \hline
+   syntax of processes & $\mathcal{P}$ & $\mathcal{P}$ \\
+   syntax of symb. rep. & $\mathcal{S}$ (Def. \ref{symqccs:symbrep})
+       & $\mathcal{S'}$
+	   (Def. \ref{neg:exsymbrep}) \\
+   the outsider performs & TPCP maps & CP maps \\
+   rewriting using & $\mathit{eqs}$ & $\mathit{eqs}$ and
+	   $\mathit{inds}$ \\
+   %transition rule & no limitation & (Comm) rule is limited \\
+   the relation to verify & $\approx$ in the original
+       \cite{DengFeng2012} & $\sim$ defined in Chapter \ref{prob_bisim}
+	   \\ 
+   applied to verify & $\mathtt{BB84} \approx \mathtt{EDPbased}$ & 
+	   $\mathtt{BB84} \sim \mathtt{EDPbased} \sim
+	   \mathtt{EDPideal}$ \\\hline
+  \end{tabular}
+\caption{Difference of the Verifiers}
+\label{fml:differofverifers}
+\end{table}
+The package of the verifiers is available from the following URL.
+\url{http://hagi.is.s.u-tokyo.ac.jp/~tk/qccsverifer.tar.gz}
+
+In this chapter,
+we describe the applications of the verifiers to
+Shor and Preskill's security proof of BB84. The formal verification
+consists of the following 2 steps.
+\begin{enumerate}
+ \item BB84 and the EDP-based protocol are formalized as configurations
+       $\mathtt{BB84}$ and $\mathtt{EDPbased}$.
+       Bisimilarity of the configurations is verified 
+       by Verifier1.
+ \item A new protocol EDP-ideal is defined.
+       In the protocol, Alice and Bob 
+       initially share EPR-pairs, whose
+       number is the same as that of the secret key's bit length.
+       Apart from that, they executes the same protocol
+       as the EDP-based protocol before creating their secret keys.
+       When the protocol is not aborted, they create their secret keys
+       just measuring their halves of pre-shared EPR-pairs.
+       Since the pre-shared EPR pairs will not be influenced
+       by Eve, Alice and Bob can create a shared secret key
+       without leaking any information.
+       The protocol EDP-ideal is formalized as a configuration 
+       $\mathtt{EDPideal}$. Approximate bisimilarity of 
+       $\mathtt{EDPbased}$ and $\mathtt{EDPideal}$ is 
+       verified by Verifier2.
+\end{enumerate}
+%We also have $\mathtt{BB84}$ and $\mathtt{EDPideal}$ are
+%approximately bisimilar.
+
+\section{Input and Output for the Verifiers}
+\subsection{Scripts}
+Input files, which we call scripts,
+contain the following descriptions.
+Although the algorithms are different,
+scripts for the verifiers are almost the same: only Verifier2
+takes indistinguishability expressions.
+
+Before formalizing processes and
+quantum states, symbols need to be declared.
+\begin{itemize}
+\item natural number symbols, which are 
+      elements of $S_{\mathit{nat}}$, in the form \\
+      {\tt nat $\mathit{n}$;}.
+\item channel names, which are elements of $\mathit{qChan}$,
+      in the form \\{\tt channel $\mathit{c}$ :
+      $\mathit{n}$;},\\
+      where $\mathit{n}$
+      is a natural number symbol defined beforehand. Through channel $c$,
+      quantum variables with length $\mathit{n}$ are communicated.
+\item quantum variables, which are elements of $\sfqv$, 
+      in the form \\
+      {\tt qvar $\mathit{q}$ : $\mathit{n}$;},\\
+      where $n$ is the qubit-length of $q$.
+\item symbols of quantum states, which are 
+      elements of $S_{\mathit{stat}}$, in the form\\
+      $\texttt{dsym}$ $\mathit{X}$ $\texttt{:}$ $n_1 \texttt{,}
+      ...\texttt{,}
+      n_k\texttt{;}$.\\
+      $X$ is a quantum state which $k$ quantum variables with
+      qubit-length
+      $n_1,...,n_k$ are in. ``dsym'' stands for 
+      ``density operator symbol''.
+\item symbols of TPCP maps (or CP maps), which are elements of
+      $S_{\mathit{op}}$ (or $S_{\mathit{cp}}$), in the form\\
+      {\tt operator $\mathit{op}$ : $n_1 \texttt{,} ...\texttt{,}
+      n_k\texttt{;}$}.\\
+      $\mathit{op}$ acts on 
+      quantum variables with qubit-length $n_1,...,n_k$.
+      For Verifier2, user-defined CP map symbols are assumed to 
+      represent TPCP. Recall that for the process construction 
+      $\op{\mathit{op}}{\tilde q}.P$, $\mathit{op}$ is assumed to
+      be a TPCP map.
+\end{itemize}
+Processes, quantum states, configurations, and 
+equations on quantum states are then defined.
+\begin{itemize}
+\item A process is defined in the form\\
+      {\tt process} {\it process\_name}\\
+      ~$P$\\
+      {\tt end}.
+\item A quantum state is defined in the form\\
+      {\tt environment} {\it environment\_name}\\
+      ~$\rho$\\
+      {\tt end}.
+\item A configuration is defined in the form\\
+      {\tt configuration}\\
+      ~{\tt proc} {\it process\_name}\\
+      ~{\tt env}  {\it environment\_name}\\
+      {\tt end}.
+\item An equation is defined in the form\\
+      {\tt equation} {\it equation\_name}\\
+      ~$\rho\mathrel{\texttt{=}}\sigma$\\
+      {\tt end},\\
+      where $\rho$ and $\sigma$ are quantum states. For a quantum
+      state, description $\texttt{\_\_}\texttt{[}\tilde q\texttt{]}$ is
+      permitted, which
+      matches arbitrary quantum state of $\tilde q$.
+\end{itemize}
+Only for Verifier2, indistinguishability expressions
+on quantum states are defined.
+\begin{itemize}
+ \item An indistinguishability expression is defined in the form\\
+       {\tt indistinguishable} {\it indexpression\_name} $n$\\
+       ~$\rho\mathrel{\texttt{=}}\sigma$\\
+       {\tt end},\\
+       where $n$ is a natural number symbol, and
+       $\rho$ and $\sigma$ are quantum state symbols.
+       For a quantum
+       state, description $\texttt{\_\_}\texttt{[}\tilde q\texttt{]}$ is
+       permitted, which
+       matches arbitrary quantum state of $\tilde q$.
+       Moreover, as a CP map, description
+       $\texttt{\_\_}\texttt{[}\tilde q\texttt{]}$ is permitted,
+       which matches an arbitrary CP map acting on $\tilde q$.
+\end{itemize}
+
+\subsection{Outputs}
+If no option is set, the verifiers find two configuration in a
+script, verify their (approximate) bisimilarity using the defined
+equations (and indistinguishability expressions),
+and then output $\mathit{true}$ or $\mathit{false}$.
+The verifiers have options with which they 
+show information for debugging.
+The information is about
+the reason why the recursive procedure returns $\mathit{false}$.
+Concretely, for configurations $\con{P}{\rho}$ and $\con{Q}{\sigma}$, 
+the verifiers show
+\begin{enumerate}
+ \item $P$, $Q$, $\qv{P}$, and $\qv{Q}$
+       if $\qv{P} \neq \qv{Q}$.
+ \item $\tr{\qv{P}}{\rho}$ and $\tr{\qv{Q}}{\sigma}$ if
+       $\tr{\qv{P}}{\rho} \neq \tr{\qv{Q}}{\sigma}$\\
+       (or $d(\tr{\qv{P}}{\rho}, \tr{\qv{Q}}{\sigma})$ 
+       is not verified to be negligible.)
+ \item $\alpha$, $P$, and $Q$ if $Q \not\xrightarrow{\alpha}$
+       and $P \xrightarrow{\alpha}$, or 
+       $P \not\xrightarrow{\alpha}$
+       and $Q \xrightarrow{\alpha}$.
+\end{enumerate}
+Especially, the information 2 can be used for finding equations that are
+necessary for the verification.
+For more details, readers can find user manual
+of the verifier contained in the package.
+
+We next introduce as examples formal verification of correctness of
+the quantum teleportation protocol and the super dense coding
+protocol using Verifier1. The protocols were formally verified in
+\cite{FengDuanYing2011} using bisimulation. Our way of formalization
+is slightly different from theirs, because we represent classical data
+as quantum data.
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+nat 2;
+nat m;
+channel c : 2;
+channel d : 1;
+qvar q  : 1;
+qvar q1 : 1;
+qvar q2 : 1;
+qvar x : 2;
+qvar qE : m;
+dsym EPR : 1,1;
+dsym ZERO : 2;
+dsym AFTER : 1,1,2;
+dsym ANY : 1;
+dsym EVE : m;
+operator cnot : 1,1;
+operator hadamard : 1;
+operator measure : 1,1,2;
+operator telproc : 2,1;
+operator swap : 1,1;
+
+process Tel_Proc
+ ((cnot[q,q1].
+   hadamard[q].
+   measure[q,q1,x].
+   c!x.discard(q,q1)
+ ||
+   c?y.telproc[y,q2].
+   d!q2.discard(y)
+ )/{c})
+end
+
+environment Tel_Env
+ EPR[q1,q2] * ZERO[x]
+ * ANY[q] * EVE[qE]
+end
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+configuration Tel
+ proc Tel_Proc
+ env  Tel_Env
+end
+
+process TelSpec_Proc
+ swap[q,q2].d!q2.discard(q1,x,q)
+end
+
+environment TelSpec_Env
+ EPR[q1,q2] * ZERO[x]
+ * ANY[q] * EVE[qE]
+end
+
+configuration TelSpec
+ proc TelSpec_Proc
+ env  TelSpec_Env
+end
+
+equation E1
+ telproc[x,q2](measure[q,q1,x](
+ hadamard[q](cnot[q,q1](
+ EPR[q1,q2] * ZERO[x] * ANY[q])
+ )))
+ = 
+ ANY[q2] * AFTER[q,q1,x]
+end
+
+equation E2
+ swap[q,q2](EPR[q1,q2] * ANY[q])
+ =
+ EPR[q1,q] * ANY[q2]
+end
+\end{verbatim}
+\end{minipage}
+\caption{Formalization of Quantum Teleportation}
+\label{fml:codetel}
+\end{figure}
+
+\begin{ex}
+\label{fml:teleportation}
+ An example of formal verification of the quantum teleportation protocol is
+ shown in Figure \ref{fml:codetel}.
+ The protocol is formalized as a configuration {\tt
+ Tel}. A configuration {\tt TelSpec} is a specification of the protocol, which
+ merely swaps input's and output's quantum states.
+ With equation {\tt E1} and {\tt E2}, {\tt Tel} and {\tt TelSpec} are
+ automatically proven to be bisimilar.
+\end{ex}
+The interpretations of natural number symbols, TPCP maps and
+quantum states in the script of Example \ref{fml:teleportation} are as follows.
+\begin{itemize}
+\item The natural number symbol {\tt 2} is interpreted to the
+      natural number $2$.
+      {\tt m} is interpreted to an arbitrary natural number $m$.
+\item The quantum state symbols are interpreted as follows.
+      \begin{itemize}
+       \item $\braw{\mathtt{EPR}} = (\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+	     (\frac{\ket{00}+\ket{11}}{\sqrt{2}})^\dagger$
+       \item $\braw{\mathtt{ZERO}} = \ket{00}\bra{00}$
+       \item $\braw{\mathtt{AFTER}} = \frac{1}{4}(
+	     \ket{0000}\bra{0000}+\ket{0101}\bra{0101}
+	     +\ket{1010}\bra{1010}+\ket{1111}\bra{1111})$
+       \item {\tt ANY} and {\tt EVE} are interpreted to arbitrary quantum
+	     states with dimension $1$ and $m$.
+      \end{itemize}
+\item The TPCP map symbols 
+      are interpreted as follows.
+      \begin{itemize}
+       \item $\braw{\texttt{cnot}}_{q,r}$ is CNOT operator
+	     in which the control qubit is $q$ and the target qubit
+	     is $r$.
+       \item $\braw{\texttt{hadamard}}_s$ is Hadamard
+	     transformation to $s$.
+       \item $\braw{\texttt{swap}}_{t,u}$ is the operation
+	     swapping the state of $t$ and $u$.
+       \item $\braw{\texttt{measure}}(\cdot) = A(\cdot)A^\dagger$,
+	     where $A = \ket{00}\bra{00}\otimes I \otimes
+	     I + \ket{01}\bra{01} \otimes I \otimes X + 
+	     \ket{10}\bra{10} \otimes X \otimes I + \ket{11}\bra{11}
+	     \otimes X \otimes X$.     
+       \item $\braw{\texttt{telproc}}(\cdot) = B(\cdot)B^\dagger$,
+	     where $B = \ket{00}\bra{00}\otimes I +
+	     \ket{01}\bra{01} \otimes X + 
+	     \ket{10}\bra{10} \otimes Z + \ket{11}\bra{11} \otimes XZ$.
+      \end{itemize}
+\end{itemize}
+Under the above definitions of interpretations, 
+validity of equations {\tt E1} and {\tt E2} are checked by hand.
+
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+nat 2;
+nat m;
+channel c : 1;
+channel d : 2;
+qvar q  : 2;
+qvar q1 : 1;
+qvar q2 : 1;
+qvar x  : 2;
+qvar qE : m;
+dsym EPR : 1,1;
+dsym ZERO : 2;
+dsym ANY2bit : 2;
+dsym EVE : m;
+operator cnot : 1,1;
+operator hadamard : 1;
+operator swap : 2,2;
+operator measure : 1,1,2;
+operator sdcproc : 2,1;
+
+process Sdc_Proc
+ ((sdcproc[q,q1].
+   c!q1.discard(q)
+ ||
+   c?y.cnot[y,q2].
+   hadamard[y].
+   measure[y,q2,x].
+   d!x.discard(y,q2)
+ )/{c})
+end
+
+environment Sdc_Env
+ EPR[q1,q2] * ZERO[x] *
+ ANY2bit[q] * EVE[qE]
+end
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+configuration Sdc
+ proc Sdc_Proc
+ env  Sdc_Env
+end
+
+process SdcSpec_Proc
+ swap[q,x].d!x.discard(q,q1,q2)
+end
+
+environment SdcSpec_Env
+ EPR[q1,q2] * ZERO[x] *
+ ANY2bit[q] * EVE[qE]
+end
+
+configuration SdcSpec
+ proc SdcSpec_Proc
+ env  SdcSpec_Env
+end
+
+equation E1
+ Tr[q1,q2,q](
+  measure[q1,q2,x](
+  hadamard[q1](
+  cnot[q1,q2](
+  sdcproc[q,q1](
+   EPR[q1,q2] * ZERO[x]
+   * ANY2bit[q])))))
+ = 
+ ANY2bit[x]
+end
+
+equation E2
+ swap[q,x](ZERO[x] * ANY2bit[q])
+ =
+ ANY2bit[x] * ZERO[q]
+end
+\end{verbatim}
+\end{minipage}
+\caption{Formalization of Super Dence Coding}
+\label{fml:codesdc}
+\end{figure}
+
+\begin{ex}
+\label{fml:densecoding}
+ An example of formal verification of the super dense cording protocol is
+ shown in Figure \ref{fml:codesdc}.
+ The protocol is formalized as a configuration {\tt
+ Sdc}. A configuration {\tt SdcSpec} is a specification of the protocol,
+ which merely swaps input's and output's quantum states.
+ With equation {\tt E1} and {\tt E2}, {\tt Sdc} and {\tt SdcSpec} are
+ automatically proven to be bisimilar.
+\end{ex}
+The interpretations of natural number symbols, TPCP maps and
+quantum states in the script of Example \ref{fml:densecoding} are as follows.
+\begin{itemize}
+\item The natural number symbol {\tt 2} are interpreted to the
+      natural number $2$.
+      {\tt m} is interpreted to an arbitrary natural number $m$.
+\item The quantum state symbols are interpreted as follows.
+      \begin{itemize}
+       \item $\braw{\mathtt{EPR}} = (\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+	     (\frac{\ket{00}+\ket{11}}{\sqrt{2}})^\dagger$
+       \item $\braw{\mathtt{ZERO}} = \ket{00}\bra{00}$
+       \item The symbol {\tt ANY2bit} is interpreted to either
+	     $\ket{00}\bra{00}$, $\ket{01}\bra{01}$,
+	     $\ket{10}\bra{10}$, or $\ket{11}\bra{11}$.
+       \item The symbol {\tt EVE} is interpreted to arbitrary quantum
+	     states with dimension $m$.
+      \end{itemize}
+\item TPCP map symbols 
+      are interpreted as follows.
+      \begin{itemize}
+       \item $\braw{\texttt{cnot}}_{q,r}$ is CNOT operator
+	     in which the control qubit is $q$ and the target qubit
+	     is $r$.
+       \item $\braw{\texttt{hadamard}}_s$ is Hadamard
+	     transformation to $s$.
+       \item $\braw{\texttt{swap}}_{t,u}$ is the operation
+	     swapping the state of $t$ and $u$.
+       \item $\braw{\texttt{measure}}(\cdot) = A(\cdot)A^\dagger$,
+	     where $A = \ket{00}\bra{00}\otimes I \otimes
+	     I + \ket{01}\bra{01} \otimes I \otimes X + 
+	     \ket{10}\bra{10} \otimes X \otimes I + \ket{11}\bra{11}
+	     \otimes X \otimes X$.     
+       \item $\braw{\texttt{sdcproc}}(\cdot) = B(\cdot)B^\dagger$,
+	     where $B = \ket{00}\bra{00}\otimes I +
+	     \ket{01}\bra{01} \otimes X + 
+	     \ket{10}\bra{10} \otimes Z + \ket{11}\bra{11} \otimes XZ$.
+      \end{itemize}
+\end{itemize}
+Under the above definitions of interpretations, 
+validity of equations {\tt E1} and {\tt E2} are checked by hand. 
+
+\section{Policies and Techniques of Formalization}
+\label{fml:policiesandtechs}
+\subsection*{Naming of Quantum Variables}
+There are principals Alice, Bob, and Eve in QKD protocols that we
+consider.
+For readability, quantum variables that Alice, Bob, and Eve initially
+have are appended with $\texttt{\_A}$, $\texttt{\_B}$ and
+$\texttt{\_E}$ respectively in the scripts.
+The exception is that $\texttt{EVE\_2[r\_B]}$ is 
+initially the state of Eve's variable but she will be able to
+send it to Bob through $\texttt{c2?r\_B}$ because $\texttt{c2}$ is
+public. This means that arbitrary quantum state that
+Eve has prepared can be sent to Bob through the public channel.
+
+\subsection*{Formalization of Channels}
+As in general QKD protocols, three kinds of channels are used:
+public quantum channels, private classical channels, and public
+no-interpolate
+classical channels.
+Whether values
+themselves are quantum or classical does not matter here, since
+classical values are expressed as quantum states.
+A diagonal density operator can be regarded to represent a 
+classical value. Let us say that a quantum variable $q$ is assigned
+a classical value when $q$'s quantum state is represented as a 
+diagonal operator.
+
+Since the syntax has channel restriction $P \backslash L$,
+formalization of the private channels is straightforward.
+The public quantum channels and the public
+no-interpolate classical channels are realized by copying
+the data.
+If a quantum variable $q$ that is assigned a classical value
+is sent through a public no-interpolate channel $c$, this is 
+formalized as
+\[
+...\texttt{copy[}q\texttt{,}Q\texttt{].}c\texttt{!}q\texttt{.}d\texttt{!}Q...\backslash
+\{...,c,...\},
+\]
+where $Q$ is a new quantum variable, an operator $\texttt{copy}$ 
+copies the value of $q$ to $Q$, and $d$
+is a new non-restricted channel. Concretely, the operator
+$\texttt{copy[}q,Q\texttt{]}$ initializes the state of $Q$ to
+$\ket{0 \cdots 0}\bra{0 \cdots 0}$ and apply CNOT with each
+qubit of $q$ as the control and each qubit of $Q$ as the target.
+The variable $q$ will be securely 
+sent through the restricted channel $c$ and Eve
+obtains the same value accessing $Q$ through the public channel
+$d$. 
+
+\subsection*{Aborting}
+Error checking and aborting is important in QKD protocols.
+When Alice and Bob decide to abort an execution of a protocol, what they
+do after the aborting is often not explicitly written
+\cite{BennetBrassard1984, ShorPreskill2000}.
+Although there are several possibilities, we merely write
+processes that do nothing after the aborting.
+
+\subsection*{Outputting Secret Keys}
+\label{fml:outputtingsks}
+In our formalization, the processes of QKD protocols 
+send the completed secret keys
+to the outside and terminate keeping quantum variables
+that need not be sent to the outside.
+The purpose is to verify that
+the protocols produce the identical keys in BB84 and the EDP-based
+protocol (or approximately identical keys in the EDP-based protocol and
+EDP-ideal).
+
+Congruence of the relation $\sim$
+(Theorem \ref{neg:congruence}, in Chapter \ref{prob_bisim}) is 
+useful in checking the behavior of the configurations of QKD under the presence
+of additional processes.
+Let us write 
+the configurations of EDP-ideal and BB84 as
+$\con{\mathit{EDPideal}}{\rho}$ and $\con{\mathit{BB84}}{\sigma}$.
+By congruence, if
+$\con{\mathit{EDPideal}}{\rho} \sim
+\con{\mathit{BB84}}{\sigma}$ holds, which can be verified using
+Verifier2, we have
+\[
+ \con{\mathit{EDPideal}||
+P_{\mathrm{Alice}}||
+P_{\mathrm{Bob}}
+}{\rho} \sim
+ \con{\mathit{BB84}||
+P_{\mathrm{Alice}}||
+P_{\mathrm{Bob}}
+}{\sigma},
+\]
+where $P_{\mathrm{Alice}}$ and $P_{\mathrm{Bob}}$
+are processes that run after given the secret keys from
+$\mathit{EDPideal}$ or $\mathit{BB84}$.
+Moreover, we have
+\[
+ \con{(\mathit{EDPideal}||
+P_{\mathrm{Alice}}||
+P_{\mathrm{Bob}})\backslash \{\mathit{cka}, \mathit{ckb}\}
+}{\rho} \sim
+ \con{(\mathit{BB84}||
+P_{\mathrm{Alice}}||
+P_{\mathrm{Bob}})\backslash \{\mathit{cka}, \mathit{ckb}\}
+}{\sigma},\]
+where $\mathit{cka}$ and $\mathit{ckb}$ are
+secret channels to communicate Alice's and Bob's key.
+This suggests that we immediately have that
+$P_{\mathrm{Alice}}$ and $P_{\mathrm{Bob}}$ behave equivalently
+with secret keys created by $\con{\mathit{EDPideal}}{\rho}$ and
+$\con{\mathit{BB84}}{\sigma}$.
+
+\section{Formal Verification of Equivalence of BB84 and \\
+the EDP-based Protocol}
+\label{fml:formalverif1}
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+process EDPbased
+ ((hadamards[q2_A,r2_A,s_A].
+  shuffle[q2_A,r2_A,t_A].
+  c1!q2_A.c2!r2_A.c3?a_A.
+  copyN[t_A,T_A].c4!t_A.d1!T_A.
+  copy2n[s_A,S_A].c5!s_A.d2!S_A.
+  measure[q1_A].
+  c6?u_A.
+  abort_alice[q1_A,u_A,b1_A].
+  copy1[b1_A,b2_A].
+  copy1[b1_A,B_A].
+  c7!b1_A.d3!B_A.
+  meas b2_A then
+   css_projection[r1_A,x_A,z_A].
+   copyn[x_A,X_A].
+   css_decode[r1_A,x_A,z_A].
+   measure[r1_A].
+   c8!x_A.d4!X_A.
+   c9!z_A.barrier!f_A.
+   cka!r1_A.
+   discard(q1_A,b2_A,a_A,
+           u_A,v1_A,v_B)
+  saem
+ ||
+  c1?q_B.c2?r_B.
+  c3!a_B.d5!A_B.
+  c4?t_B.unshuffle[q_B,r_B,t_B].
+  c5?s_B.hadamards[q_B,r_B,s_B].
+  measure[q_B].
+  copyn[q_B,Q_B].c6!q_B.d6!Q_B.
+  c7?b_B.
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+   meas b_B then 
+    c8?x_B.c9?z_B.
+    css_syndrome[r_B,x_B,z_B,
+                 sx_B,sz_B].
+    css_correct[r_B,sx_B,sz_B].
+    css_decode[r_B,x_B,z_B].
+    measure[r_B].
+    barrier?f_B.
+    ckb!r_B.
+    discard(b_B,s_B,t_B,x_B,
+            z_B,sx_B,sz_B,f_B)
+   saem)/{c3, c4, c5, c6, c7, c8, 
+    c9, barrier})
+end
+
+environment EDPbased_ENV
+ EPR[q1_A,q2_A] * EPR[r1_A,r2_A]
+ * RND_2n[s_A] * RND_N[t_A] *
+ Z_1[b1_A] * Z_1[b2_A] * Z_n[x_A]
+ * Z_n[z_A] * Z_2n[S_A] * 
+ Z_N[T_A] * 
+ Z_1[B_A] * Z_n[X_A] * Z_1[f_A]
+ * Z_1[a_B] * Z_1[A_B] * Z_n[Q_B]
+ * Z_n[sx_B] * Z_n[sz_B]
+ * EVE[q_E] * Z_n_n[v1_A,v_B]
+ * EVE1[q_B] * EVE2[r_B]
+end
+
+configuration EDPbased
+ proc EDPbased
+ env EDPbased_ENV
+end
+\end{verbatim}
+\end{minipage}
+\caption{Formalization of the EDP-based Protocol}
+\label{fml:EDPbased}
+\end{figure}
+
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+%\scriptsize
+\begin{verbatim}
+process BB84
+((hadamards[q2_A,r2_A,s_A].
+ shuffle[q2_A,r2_A,t_A].
+ c1!q2_A.c2!r2_A.c3?a_A.
+ copyN[t_A,T_A].c4!t_A.d1!T_A.
+ copy2n[s_A,S_A].c5!s_A.d2!S_A.
+ c6?u_A.
+ abort_alice[q1_A,u_A,b1_A].
+ copy1[b1_A,b2_A].
+ copy1[b1_A,B_A].
+ c7!b1_A.d3!B_A.
+ meas b2_A then 
+  cnot[r1_A,x_A].
+  copyn[x_A,X_A].
+  cnot_and_swap[x_A,r1_A].
+  key[r1_A].
+  c8!x_A.d4!X_A.
+  barrier!f_A.
+  cka!r1_A.
+  discard(q1_A,b2_A,a_A,
+          z_A,u_A,v1_A,v_B)
+ saem
+||
+ c1?q_B.c2?r_B.
+ c3!a_B.d5!A_B.
+ c4?t_B.unshuffle[q_B,r_B,t_B].
+ c5?s_B.hadamards[q_B,r_B,s_B].
+ measure[q_B].
+ copyn[q_B,Q_B].c6!q_B.d6!Q_B.
+ c7?b_B.meas b_B then
+ c8?x_B.
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+%\scriptsize
+\begin{verbatim}
+  measure[r_B].
+  cnot[x_B,r_B].
+  copyn[x_B,r_B].
+  syndrome[r_B,sx_B].
+  correct[r_B,sx_B].
+  key[r_B].
+  barrier?f_B.
+  ckb!r_B.
+  discard(b_B,s_B,t_B,
+          x_B,sx_B,sz_B,f_B)
+ saem)/{c3, c4, c5, c6,
+        c7, c8, barrier})
+end
+
+environment BB84_ENV
+ PROB[q1_A,q2_A] *
+ PROB[r1_A,r2_A]
+ * RND_2n[s_A] * RND_N[t_A]
+ * Z_1[b1_A] * Z_1[b2_A]
+ * RC1[x_A] * RC2[z_A] 
+ * Z_2n[S_A]
+ * Z_N[T_A] * Z_1[B_A] * Z_n[X_A]
+ * Z_1[f_A] *  Z_1[a_B] 
+ * Z_1[A_B]
+ * Z_n[Q_B] * Z_n[sx_B]
+ * Z_n[sz_B] * Z_n_n[v1_A,v_B]
+ * EVE[q_E] * EVE1[q_B]
+ * EVE2[r_B]
+end
+
+configuration BB84
+ proc BB84
+ env BB84_ENV
+end
+\end{verbatim}
+\end{minipage}
+\caption{Formalization of BB84 Protocol}
+\label{fml:BB84}
+\end{figure}
+
+The scripts of formalization of 
+the EDP-based protocol and BB84 is shown in
+Figure \ref{fml:EDPbased} and \ref{fml:BB84}.
+
+\subsection{Formalization of the EDP-based Protocol}
+The EDP-based protocol employs CSS quantum error correcting code (QECC),
+which
+is constructed from two classical linear codes $C_1, C_2$.
+CSS QECC can be parametrized with $u \in C_2$ and 
+$v \in \{0,1\}^n - C_1$.
+We write $\mathrm{CSS}_{u,v}(C_1,C_2)$ for CSS code parametrized $u$ and
+$v$ that employ codes $C_1$ and $C_2$.
+
+\subsection{Symbols and Operators in the EDP-based Protocol}
+\subsubsection{Quantum State Symbols}
+\begin{itemize}
+ \item Alice first prepares EPR pairs. Let quantum variables $q$ and $r$
+       be of the length {\tt n}, where {\tt n} interpreted as an
+       arbitrary natural number $n$. 
+       $\texttt{EPR[}q,r\texttt{]}$ is interpreted to EPR pairs
+       $((\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+       (\frac{\ket{00}+\ket{11}}{\sqrt{2}})^\dagger)^{\otimes
+       n}_{q,r}$.
+ \item $\texttt{RND\_2n[}q\texttt{]}$
+       $\texttt{RND\_N[}r\texttt{]}$
+       are interpreted to
+       $(\frac{1}{2}\ket{0}\bra{0}+
+       \frac{1}{2}\ket{1}\bra{1})^{\otimes 2n}_{q}$ and
+       $(\frac{1}{2}\ket{0}\bra{0}+
+       \frac{1}{2}\ket{1}\bra{1})^{\otimes N}_{r}$, where $N$
+       is represented by a natural number symbol $\mathtt{N}$.
+       $\mathtt{N}$ is interpreted to $N = \ceil{\log_2(2n!)}$.
+       This is the randomness
+       to determine check bits.
+ \item $\texttt{Z\_1[}q\texttt{]}$,
+       $\texttt{Z\_n[}r\texttt{]}$,
+       $\texttt{Z\_2n[}s\texttt{]}$, and
+       $\texttt{Z\_n\_n[}t,u\texttt{]}$,
+       are interpreted to\\
+       $\ket{0}\bra{0}_{q}$,
+       $\ket{0}\bra{0}^{\otimes n}_{r}$,
+       $\ket{0}\bra{0}^{\otimes 2n}_{s}$, and
+       $\ket{0}\bra{0}^{\otimes n}_{t} \otimes \ket{0}\bra{0}^{\otimes n}_{u}$,
+       respectively.
+ \item $\texttt{EVE}$, $\texttt{EVE1}$ and $\texttt{EVE2}$ are
+       arbitrarily interpreted. They express quantum states that are
+       prepared by the adversary. $\texttt{EVE}$ is one for a quantum
+       variable with length $\texttt{m}$, where $\texttt{m}$ is
+       interpreted as an arbitrary natural number $m$. $\texttt{EVE1}$
+       and $\texttt{EVE2}$ are ones for quantum variables with
+       length $\texttt{n}$.
+\end{itemize}
+\subsubsection*{TPCP Map Symbols}
+\begin{itemize}
+ \item $\texttt{hadamards[}q,r,s\texttt{]}$ randomly performs Hadamard
+transformation
+to qubit-string $q,r$ according to a bitstring $s$ which serves
+as a seed of randomness.
+ \item $\texttt{shuffle[}q,r,s\texttt{]}$ randomly permutates the bits
+       of qubit-string $q,r$ according to the randomness $s$.
+       In the formalization, $\mathtt{q\_A}$ and $\mathtt{r\_A}$ are
+       supposed to be used as check bits and to generate secret keys. 
+       By this procedure, they are uniformly shuffled. Later, they are
+       reverted by $\texttt{unshuffle[}q,r,s\texttt{]}$ procedure.
+ \item $\texttt{copy2n[}q,r\texttt{]}$ copies the value of $q$
+       with length $\texttt{2n}$ to $r$, where $q$ is supposed to be
+       assigned a classical value.
+       $\texttt{copyN[}q,r\texttt{]}$ and $\texttt{copy1[}q,r\texttt{]}$
+       are for quantum variables with length $\texttt{N}$ and
+       $\texttt{1}$.
+ \item $\texttt{measure[}q\texttt{]}$ is the projective measurement of
+       $q$.
+ \item $\texttt{abort\_alice[}q,r,s\texttt{]}$ compares two bitstrings 
+       $q$ and $r$, and sets the value 0 to a bit $s$ if the difference between
+       $q$ and $r$ is lower than the
+       threshold $h$, else sets the value 1 to $s$.
+       The threshold $h$ does not occur in the symbolic representation
+       $\texttt{abort\_alice[}q,r,s\texttt{]}$, but it is defined
+       when the interpretation $\braw{\texttt{abort\_alice}}$ is
+       defined. The threshold $h$ can be defined appropriately so that
+       the indistinguishability expressions are valid that are
+       used to verify approximate bisimilarity of the EDP-based
+       protocol and EDP-ideal.
+ \item $\texttt{css\_projection[}q,r,s\texttt{]}$
+       is the measurement of the observable of $q$'s state
+       that is described by the parity check matrix determined from
+       $C_1$ and $C_2$
+       (Section \ref{pre:EDPbased}, Step 7).
+       EPR pairs $q$ are converted to a random 
+       codeword of $\mathrm{CSS}_{x,y}(C_1,C_2)$, where
+       parameters $x,y$ are also uniformly distributed.
+       The value of $x$ and $y$ are stored in $r$ and $s$.
+ \item $\texttt{css\_decode[}q,r,s\texttt{]}$ decodes $q$ as 
+       $\mathrm{CSS}_{x,y}(C_1,C_2)$
+       codeword when the value of $r$ and $s$ are $x$ and $y$.
+ \item $\texttt{unshuffle[}q,r,s\texttt{]}$ is the inverse of
+       $\texttt{shuffle[}q,r,s\texttt{]}$.
+ \item $\texttt{css\_syndrome[}q,r,s,u,v\texttt{]}$ calculates
+       the error syndrome of $q$ as a codeword of
+       $\mathrm{CSS}_{x,y}(C_1,C_2)$ when
+       $r$ and $s$ have the value $x$ and $y$, and stores the syndrome in
+       $u$ and $v$.
+ \item $\texttt{css\_correct[}q,u,v\texttt{]}$ is error correction
+       with the syndrome stored in $u, v$.
+\end{itemize}
+
+\subsection{Formalization of BB84}
+BB84 employs classical codes $C_1$ and $C_2$ with $C_2 \subseteq C_1$,
+which correspond to $\mathrm{CSS}_{x,y}(C_1,C_2)$
+in the EDP-based protocol.
+
+\subsection{Symbols and Operators in BB84}
+\subsubsection{Quantum State Symbols}
+\begin{itemize}
+ \item Alice first prepares two same random bitstrings. This
+       initial state is represented by $\texttt{PROB[}q,r\texttt{]}$ with
+       $q$ for Alice and $r$ for Bob, which is interpreted as
+       $(\frac{1}{2}\ket{00}\bra{00} + 
+       \frac{1}{2}\ket{11}\bra{11})^{\otimes n}_{q,r}$.
+ \item $\texttt{RC1[}q\texttt{]}$ is interpreted as  
+       $\sum_{u\in C_1}\frac{1}{|C_1|}\ket{u}\bra{u}$.
+ \item $\texttt{RC2[}q\texttt{]}$ is interpreted as 
+       $\sum_{v\in C_2}\frac{1}{|C_2|}\ket{v}\bra{v}$.
+\end{itemize}
+\subsubsection{TPCP Map Symbols}
+\begin{itemize}
+ \item $\texttt{syndrome[}q,r\texttt{]}$ calculates the error syndrome of
+       $q$ using as a codeword in $C_1$ and store the syndrome to
+       $r$.
+ \item $\texttt{correct[}q,r\texttt{]}$ corrects errors of $q$ with the
+       syndrome $r$.
+ \item $\texttt{key[}q\texttt{]}$ calculates with respect to $C_2$ the coset of the value
+       that is an element of $C_1$ and stored in $q$.
+\end{itemize}
+
+\subsection{Equations for the Formal Verification}
+We defined 6 equations in Verifier1.
+They are described in Figure \ref{fml:eqsforbb84edp1}.
+The equations
+$\mathtt{E1}$, $\mathtt{E2}$, and $\mathtt{E3}$ are obtained formalizing
+the inferences in Shor and Preskill's security proof.
+The equations $\mathtt{E4}$, $\mathtt{E5}$, and $\mathtt{E6}$ are formalization
+of basic properties of linear operators.
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+%\scriptsize
+\begin{verbatim}
+equation E1	
+ measure[r1_A](
+ css_decode[r1_A,x_A,z_A](
+ copyn[x_A,X_A](
+ css_projection[r1_A,x_A,z_A](
+  EPR[r1_A,r2_A] *
+  Z_n[x_A] * Z_n[z_A] *
+  Z_n[X_A]))))
+ = 
+ key[r1_A](
+ cnot_and_swap[x_A,r1_A](
+ copyn[x_A,X_A](
+ cnot[r1_A,x_A](
+  PROB[r1_A,r2_A] *
+  RC1[x_A] *
+  RC2[z_A] * Z_n[X_A]))))
+end
+
+equation E2
+ measure[r_B](
+ css_decode[r_B,x_A,z_A](
+ css_correct[r_B,sx_B,sz_B](
+ css_syndrome[r_B,x_A,z_A,
+              sx_B,sz_B](
+ cnot_and_swap[x_A,r1_A](
+ copyn[x_A,X_A](
+ cnot[r1_A,x_A](
+  PROB[r1_A,r2_A] *
+  __[r_B] * RC1[x_A] *
+  RC2[z_A] * Z_n[sx_B] *
+  Z_n[sz_B] * Z_n[X_A])))))))
+ = 
+ key[r_B](
+ correct[r_B,sx_B](
+ syndrome[r_B,sx_B](
+ copyn[x_A,r_B](
+ cnot[r_B,x_A](
+ measure[r_B](
+ cnot_and_swap[x_A,r1_A](
+ copyn[x_A,X_A](
+ cnot[r1_A,x_A](
+  PROB[r1_A,r2_A] * __[r_B]
+  * RC1[x_A] * RC2[z_A]
+  * Z_n[sx_B] * Z_n[sz_B] * 
+  Z_n[X_A])))))))))
+end
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+equation E3
+ measure[r2_A](
+ css_decode[r2_A,x_A,z_A](
+ css_correct[r2_A,sx_B,sz_B](
+ css_syndrome[r2_A,x_A,z_A,
+              sx_B,sz_B](
+ cnot_and_swap[x_A,r1_A](
+ copyn[x_A,X_A](
+ cnot[r1_A,x_A](
+  __[r1_A,r2_A] * 
+  RC1[x_A] * RC2[z_A] * 
+  Z_n[sx_B] * Z_n[sz_B] *
+  Z_n[X_A])))))))
+ = 
+ key[r2_A](
+ correct[r2_A,sx_B](
+ syndrome[r2_A,sx_B](
+ copyn[x_A,r2_A](
+ cnot[r2_A,x_A](
+ measure[r2_A](
+ cnot_and_swap[x_A,r1_A](
+ copyn[x_A,X_A](
+ cnot[r1_A,x_A](
+  __[r1_A,r2_A] * 
+  RC1[x_A] * RC2[z_A] *
+  Z_n[sx_B] * Z_n[sz_B] * 
+  Z_n[X_A])))))))))
+end
+
+equation E4
+ Tr[q1_A](EPR[q1_A,q2_A])
+ =
+ Tr[q1_A](PROB[q1_A,q2_A])
+end
+
+equation E5
+ Tr[r1_A](EPR[r1_A,r2_A])
+ =
+ Tr[r1_A](PROB[r1_A,r2_A])
+end
+
+equation E6
+ measure[q1_A](EPR[q1_A,q2_A])
+ =
+ PROB[q1_A,q2_A]
+end
+\end{verbatim}
+\end{minipage}
+\caption{Equations for BB84 and the EDP-based Protocol}
+\label{fml:eqsforbb84edp1}
+\end{figure}
+
+\subsection{Experiment Result}
+\subsubsection{Experiment 1}
+We ran Verifier1 with the input of {\tt shor-preskill.scr}.
+We used a laptop with Intel Core i5 CPU M 460 @ 2.53GHz and 1GB memory.
+The transition tree of the EDP-based protocol has 621 nodes and 165
+paths, and that of BB84 has 588 nodes and 165 paths.
+The verifier checked the bisimilarity of the two protocols in 30.38
+seconds. The recursive procedure was called 753 times. 
+The number of configurations in the history was 653 and
+history was hit 653 times. The number of application of each equation
+is described as follows. The equations E1, E2, E3, E4, E5, and E6 are
+applied 55, 24, 9, 73, 271, and 11 times, respectively.
+
+\section{Formal Verification of Indistinguishability of the
+EDP-based Protocol and EDP-ideal}
+\label{fml:formalverif2}
+The last protocol EDP-ideal is a sort of cheating protocol.
+Alice and Bob are assumed to share EPR pairs initially in 
+the protocol. Alice and Bob executes the same protocol as 
+the EDP-based protocol until the decision of continue or aborting
+by the result of the error checking. Only when Alice and Bob
+decide to continue, 
+they create the secret keys using pre-shared EPR pairs instead
+of pairs obtained after the entanglement distillation protocol.
+
+\subsection{Formalization of EDP-ideal}
+The pre-shared EPR pairs are formalized as
+$\mathtt{EPR[rx\_A,rx\_B]}$. The code of EDP-ideal is
+almost the same as the EDP-based protocol. When
+Alice and Bob decide to continue the protocol,
+Alice creates her secret key from $\mathtt{rx\_A}$ and
+renames to $\mathtt{r1\_A}$ operating
+$\mathtt{create\_key[rx\_A,r1\_A]}$. Bob creates his key
+similarly by $\mathtt{create\_key[rx\_B,r\_B]}$.
+
+\begin{figure}
+\begin{minipage}{0.5\hsize}
+%\scriptsize
+\begin{verbatim}
+process EDP-IDEAL
+ ((hadamards[q2_A,r2_A,s_A].
+  shuffle[q2_A,r2_A,t_A].
+  c1!q2_A.c2!r2_A.c3?a_A.
+  copyN[t_A,T_A].c4!t_A.d1!T_A.
+  copy2n[s_A,S_A].c5!s_A.d2!S_A.
+  measure[q1_A].
+  c6?u_A.
+  abort_alice[q1_A,u_A,b1_A].
+  copy1[b1_A,b2_A].
+  copy1[b1_A,B_A].
+  c7!b1_A.d3!B_A.
+  meas b2_A then
+   css_projection[r1_A,x_A,z_A].
+   css_decode[r1_A,x_A,z_A].
+   copyn[x_A,X_A].
+   measure[r1_A].
+   c8!x_A.d4!X_A.
+   c9!z_A.
+   create_key[rx_A,r1_A].
+   barrier!f_A.
+   cka!r1_A.
+   discard(q1_A,b2_A,
+           a_A,u_A,rx_A)
+  saem
+ ||
+  c1?q_B.c2?r_B.
+  c3!a_B.d5!A_B.
+  c4?t_B.unshuffle[q_B,r_B,t_B].
+  c5?s_B.hadamards[q_B,r_B,s_B].
+  measure[q_B].
+  copyn[q_B,Q_B].c6!q_B.d6!Q_B.
+  c7?b_B.
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+\begin{verbatim}
+   meas b_B then 
+    c8?x_B.c9?z_B.
+    css_syndrome[r_B,x_B,
+                 z_B,sx_B,sz_B].
+    css_correct[r_B,sx_B,sz_B].
+    css_decode[r_B,x_B,z_B].
+    measure[r_B].
+    create_key[rx_B,r_B].
+    barrier?f_B.
+    ckb!r_B.
+    discard(b_B,s_B,t_B,x_B,z_B,
+            sx_B,sz_B,f_B,rx_B)
+   saem)/{c3, c4, c5, c6, 
+          c7, c8, c9, barrier})
+end
+
+environment EDP-IDEAL_ENV
+ EPR[q1_A,q2_A] * EPR[r1_A,r2_A]
+ * RND_2n[s_A] * RND_N[t_A]
+ * Z_1[b1_A] * Z_1[b2_A]
+ * Z_n[x_A] 
+ * Z_n[z_A] * Z_2n[S_A]
+ * Z_N[T_A]
+ * Z_1[B_A] * Z_n[X_A] * Z_1[f_A]
+ * Z_1[a_B] * Z_1[A_B] * Z_n[Q_B]
+ * Z_n[sx_B] * Z_n[sz_B]
+ * EVE[q_E]
+ * EVE1[q_B] * EVE2[r_B]
+ * EPR[rx_A,rx_B]
+end
+
+configuration EDP-IDEAL
+ proc EDP-IDEAL
+ env  EDP-IDEAL_ENV
+end
+\end{verbatim}
+\end{minipage}
+\caption{Formalization of EDP-ideal}
+\end{figure}
+\subsection{Indistinguishability Expressions for the Verification}
+We defined 24 indistinguishability expressions Verifier2.
+One of the expressions $\mathtt{E1}$ is described in Figure 
+\ref{fml:indexp}. The expression's meaning is as follows.
+\begin{enumerate}
+ \item The probability that they do not abort the protocol is negligibly
+       close in the both protocols.
+ \item If the both protocols are not aborted,
+       Alice's secret key that is created from halves of qubit pairs
+       whose states
+       are obtained after the entanglement distillation in the EDP-based
+       protocol is indistinguishable from Alice's key that is
+       created from EPR pairs.
+\end{enumerate}
+The indistinguishability expressions are prepared for each Eve's choice: she
+can choose to interfere or not to interfere communications through
+the public quantum channels $\mathsf{c1}$ and $\mathsf{c2}$.
+For example, if she interferes $\mathsf{c1}$ and does not interfere
+$\mathsf{c2}$, a possible scheduling is as follows.
+\begin{align*}
+ \cdots \xrightarrow{\tau} &
+ \con{(\sndq{c1}{\mathtt{q2\_A}}.\sndq{c2}{\mathtt{r2\_A}}.\cdots||
+ \rcvq{c1}{\mathtt{q\_B}}.\rcvq{c2}{\mathtt{r\_B}}.\cdots)\backslash 
+ \{\mathsf{c3},\cdots\}}{\rho}\\
+ \xrightarrow{\sndq{c1}{\mathtt{q2\_A}}} 
+ \xrightarrow{\rcvq{c1}{\mathtt{q\_B}}} &
+ \con{(\sndq{c2}{\mathtt{r2\_A}}.\cdots||
+ \rcvq{c2}{\mathtt{r\_B}}.\cdots)\backslash
+ \{\mathsf{c3},\cdots\}}{\rho'}\\
+ \xrightarrow{\tau} &
+ \con{(\cdots||
+ \cdots)\backslash
+ \{\mathsf{c3},\cdots\}}{\rho''}
+\end{align*}
+$\mathtt{E1}$ is for the case where Eve chooses the scheduling
+$\xrightarrow{\sndq{c1}{\mathtt{q2\_A}}}
+\xrightarrow{\rcvq{c1}{\mathtt{q\_B}}}$ and\\
+$\xrightarrow{\sndq{c2}{\mathtt{r2\_A}}}
+\xrightarrow{\rcvq{c2}{\mathtt{r\_B}}}$. The order of sending and
+receiving does not matter here.
+ As for this point, we needed 4 types of indistinguishability expressions
+for the cases where Eve interferes both $\mathsf{c1}, \mathsf{c2}$,
+only $\mathsf{c1}$, only $\mathsf{c2}$, and does not interfere both.
+
+The indistinguishability expressions are also prepared for certain
+steps of the protocols: after completing the keys, Alice and Bob output
+their keys but who sends the first is non-deterministic.
+For instance, the quantum variable {\tt r\_B} is in the expression
+{\tt Tr[b1\_A,b2\_A,q1\_A,q\_B,r\_B,rx\_A,rx\_B,s\_A,t\_A,x\_A,z\_A]} in
+the first
+line and this is for the step where Alice has already 
+sent her key {\tt r1\_A} to the outside by {\tt cka!r1\_A}
+but Bob has not yet his secret
+key {\tt r\_B} by {\tt ckb!r\_B}. As for this point,
+we needed 3 types of indistinguishability expressions
+for the cases where the outsider has obtained only Alice's key, 
+only Bob's key, and both.
+
+We have explained the reason why we needed $3 \times 4 = 12$
+indistinguishability expressions.
+Finally, for each expression, we needed one equivalent expression
+obtained replacing the order of the CP maps, because the pattern matching
+algorithm for CP maps does not solve commutativity completely.
+Hence, we prepared $12 \times 2 = 24$ expressions.
+\begin{figure}
+\begin{verbatim}
+indistinguishable E1 n
+ Tr[b1_A,b2_A,q1_A,q_B,r_B,rx_A,rx_B,s_A,t_A,x_A,z_A](
+  create_key[rx_A,r1_A](proj1[b1_A](measure[r1_A](
+  copyn[x_A,X_A](css_decode[r1_A,x_A,z_A](
+  css_projection[r1_A,x_A,z_A](proj1[b2_A](
+  copy1[b1_A,B_A](copy1[b1_A,b2_A](
+  abort_alice[q1_A,q_B,b1_A](measure[q1_A](
+  copyn[q_B,Q_B](measure[q_B](
+  hadamards[q_B,r_B,s_A](copy2n[s_A,S_A](
+  unshuffle[q_B,r_B,t_A](copyN[t_A, T_A](
+  __[q2_A,r2_A,q_E,q_B,r_B](
+  shuffle[q2_A,r2_A,t_A](hadamards[q2_A,r2_A,s_A](
+    EPR[q1_A,q2_A] * EPR[r1_A,r2_A] * EPR[rx_A,rx_B] *
+    RND_2n[s_A] * Z_2n[S_A] * RND_N[t_A] * Z_N[T_A] * 
+    Z_1[b1_A] * Z_1[b2_A] * Z_1[B_A] * Z_n[Q_B] *
+    Z_n[x_A] * Z_n[X_A] * Z_n[z_A] * 
+    __[q_B] * __[r_B] * __[q_E]
+ )))))))))))))))))))))
+ =
+ Tr[b1_A,b2_A,q1_A,q_B,r_B,s_A,t_A,x_A,z_A](
+  proj1[b1_A](measure[r1_A](
+  copyn[x_A,X_A](css_decode[r1_A,x_A,z_A](
+  css_projection[r1_A,x_A,z_A](proj1[b2_A](
+  copy1[b1_A,B_A](copy1[b1_A,b2_A](
+  abort_alice[q1_A,q_B,b1_A](measure[q1_A](
+  copyn[q_B,Q_B](measure[q_B](
+  hadamards[q_B,r_B,s_A](copy2n[s_A,S_A](
+  unshuffle[q_B,r_B,t_A](copyN[t_A, T_A](
+  __[q2_A,r2_A,q_E,q_B,r_B](
+  shuffle[q2_A,r2_A,t_A](hadamards[q2_A,r2_A,s_A](
+    EPR[q1_A,q2_A] * EPR[r1_A,r2_A] * 
+    RND_2n[s_A] * Z_2n[S_A] * RND_N[t_A] * Z_N[T_A] * 
+    Z_1[b1_A] * Z_1[b2_A] * Z_1[B_A] * Z_n[Q_B] *
+    Z_n[x_A] * Z_n[X_A] * Z_n[z_A] *
+    __[q_B] * __[r_B] * __[q_E]
+  ))))))))))))))))))))
+end
+\end{verbatim}
+\label{fml:indexp}
+\caption{Indistinguishable Expression E1}
+\end{figure}
+\subsection{Experiment Result}
+\subsubsection{Experiment 2}
+We performed the experiment in the same environment as the
+previous part of the formal verification described
+in Section \ref{fml:formalverif1}.
+We ran Verifier2 with the input of {\tt edp-edpideal.scr}, where
+the EDP based protocol and EDP-ideal are formalized.
+As for the transition tree, the both protocols have 621 nodes and 165
+paths. Verifier2 checked the bisimilarity of the two protocols in 112.50
+seconds. The recursive procedure was called 907 times.
+The number of configurations in the history was 763 and
+history was hit 620 times. The number of application of each equation
+is described as follows. The equations E1, E2, E3, E1-2, E2-2, and E3-2 are
+applied 6, 12, 6, 12, 24, and 12 times, respectively.
+The equations F1, F2, F3, F1-2, F2-2, and F3-2 are
+applied 2, 4, 2, 4, 8, and 4 times, respectively.
+The equations G1, G2, G3, G1-2, G2-2, and G3-2 are
+applied 2, 4, 2, 4, 8, and 4 times, respectively.
+The equations H1, H2, H3, H1-2, H2-2, and H3-2 are
+applied 1, 2, 1, 2, 4, and 2 times, respectively.
+
+\subsubsection{Experiment 3}
+We ran Verifier2 with the input of {\tt bb84-edp.scr}, which is
+identical to the script of Experiment 1.
+It checked the bisimilarity of the two protocols in 39.50
+seconds. The recursive procedure was called 1039 times. 
+The transition tree of the EDP-based protocol has 621 nodes and 165
+paths, and that of BB84 has 588 nodes and 165 paths, which is the same
+result as the Experiment 1.
+The number of configurations in the history was 796 and
+history was hit 653 times. The number of application of each equation
+is described as follows. The equations E1, E2, E3, E4, E5, and E6 are
+applied 132, 24, 9, 73, 458, and 11 times, respectively.
+
+\subsubsection{Discussion about the Results}
+Although the number of the call of the recursive procedure is close,
+it took more time, 112.50 seconds, in Experiment 2
+compared to 30.38 seconds in Experiment 3.
+There are following two reasons.
+The first is that the algorithm of the Verifier2 
+is more complex than that of Verifier1: 
+wild card of CP map symbol $\texttt{\_\_[} \tilde q \texttt{]}$ 
+is permitted in indistinguishability expressions. The algorithm
+to match the left-hand side of the expressions is more complex for the
+sake of the wild card matching.
+The second is that both the number of indistinguishability expressions
+and the sizes of them are larger. For each time of testing
+indistinguishability, the procedure checks for each 
+indistinguishability expression whether it matches to the
+left-hand side of the objective quantum states.
+
+Let us compare Experiment 1 and Experiment 3.
+Although we used the same input file, the number of calling the 
+recursive procedure is different. This is because the existence or
+absence of the requirement that a branch caused by $\mathtt{meas}$
+should be matched, which we mentioned in Section 
+\ref{neg:extensionofalgorithm}. With
+the requirement, to simulate a
+transition caused by $\mathtt{meas}$, the number of transitions which
+are candidate for success of the simulation is more limited:
+Verifier1 only seeks a $\tau$ transition caused by $\mathtt{meas}$ by the
+same qubit variable.
+
+% \section{Related Work}
+% \subsection{CryptoVerif}
+% \label{fml:rel-cv}
+% $\mathsf{CryptoVerif}$ \cite{Blanchet2008cryptoverif} 
+% is a software tool to verify security of
+% \emph{classical} protocols.
+% As a proof technique, $\mathsf{CryptoVerif}$ applies 
+% \emph{observational equivalence} of processes.
+% Let $\Pr(P \rightsquigarrow a)$
+% be the probability
+% that the process $P$ transits to a process that is ready to send some
+% data through the channel $a$.
+% Two processes $P$ and $Q$ are observationally equivalent, written
+% $P \cong Q$ here, if
+% $$
+% |\Pr(C[P] \rightsquigarrow a) - \Pr(C[Q] \rightsquigarrow a)|
+% $$
+% is negligible for all evaluation context
+% $C[\_]$ that runs in polynomial time
+% and channel $a$ that is
+% not restricted. 
+% The relation $\cong$ is \emph{congruent} by the definition,
+% namely, if $P \cong Q$ holds, then $C[P] \cong C[Q]$ holds for all
+% evaluation context $C[\_]$ running in polynomial time.
+% When we consider $C[\_]$ as a polynomial time
+% adversary that runs in parallel with the protocol $P$ or $Q$,
+% the observational equivalence of them is intuitively interpreted
+% as indistinguishability of the protocols from an adversary.
+
+% In cryptographic proofs, security of a high-level protocol
+% is reduced to security of the employed cryptographic primitives,
+% which is assumed.
+% Similarly, security of a cryptographic scheme is reduced to 
+% assumed difficulty of computing certain functions.
+% In $\mathsf{CryptoVerif}$, a user formalizes such assumptions as
+% observational equivalence of processes.
+% Given a process $P$ formalizing a target protocol and 
+% user-defined observational equivalence, $\mathsf{CryptoVerif}$
+% tries to rewrite $P$ to another process $Q$ that is obviously secure:
+% if $P$ is of the form $C[X]$ and there is a user defined
+% equivalence $X \cong Y$, then it is rewritten to $C[Y]$.
+% On the other hand, our tools verify bisimilarity by
+% tracing execution paths of configurations, not by
+% rewriting processes.
+
+% Fortunately, the bisimulation in qCCS is congruent, and
+% it is thus possible that a verification tool is
+% designed to verify bisimilarity by rewriting.
+% With such a verifier, bisimilarity of 
+% big-sized configurations is derived from that of some small-sized ones.
+% Especially in proofs of security of QKD protocols,
+% difficulty of computing certain functions is not assumed.
+% Therefore, even if a verifier conducts the rewriting,
+% we possibly need to prove bisimilarity of
+% such small-sized configurations unlike
+% verification using $\mathsf{CryptoVerif}$.

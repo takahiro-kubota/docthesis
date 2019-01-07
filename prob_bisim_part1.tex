@@ -1,0 +1,666 @@
+%\usepackage{graphics}
+\chapter{Approximate Bisimulation for Quantum Processes}
+\label{prob_bisim}
+Two notions of approximate bisimulation
+are defined in our simplified formal framework named 
+nondeterministic qCCS, which is 
+defined in the previous chapter, namely, the 
+relations are on $\C = \mathcal{P} \times \Delta(\H)$
+with simplified operational semantics.
+The relation $\sim_{\zeta, \eta}$ is defined in Section \ref{par} and
+the relation $\sim$ is in Section \ref{neg}.
+Before the definitions, we introduce some preliminaries.
+
+\section{Preliminaries}
+\subsection{Negligible Functions}
+\begin{defi}
+ A function $f:\mathbb{N}\rightarrow [0, 1]$ is \emph{negligible} if and
+ only if for all polynomial $p(\cdot)$, there exists a natural number
+ $N$ such that $f(n) \le \frac{1}{p(n)}$ holds
+ for all $n \ge N$. $f$ is
+ \emph{non-negligible} if $f$ is not negligible.
+\end{defi}
+\begin{rem}
+ A function $\frac{f}{g}(n) \defeq \frac{f(n)}{g(n)}$ can be
+ non-negligible even if $f$ is negligible and $g$ is non-negligible.
+ An example is $f(n) = \frac{1}{2^n}$ and
+\begin{displaymath}
+ g(n) = \left\{
+\begin{array}{l}
+\frac{1}{2^n}~~~(n \mbox{ is even})\\
+\frac{1}{n^2}~~~(\mbox{otherwise}).
+\end{array}
+\right.
+\end{displaymath}
+ In this thesis, we say $g$ is \emph{greater than negligible} if the
+ function
+ $\frac{f}{g}$ is negligible for all
+ negligible function $f$.
+\end{rem}
+
+\begin{prop}
+\label{par:propneg}
+ If $f$ and $g$ are negligible, then $f + g$ and $cf$ is negligible for
+ all $c \ge 0$.
+\end{prop}
+
+\subsection{Trace Distance of Probability-Weighted Quantum States}
+Trace distance is a metric on a set of
+linear operators.
+To compare quantum states, trace distance on $\D(\H)$
+is usually considered \cite[Chapter
+9]{NielsenChuang-Kimura2004}.
+Since we consider probability-weighted quantum states, 
+we consider trace distance on $\Delta(\H)$, and discuss an
+interpretation of it with respect to our transition system.
+
+Let $\rho, \sigma \in \Delta(\H)$. $\rho - \sigma$ is an Hermitian
+operator. Let $\sqrt{A}$ be $\sum_i \sqrt{\lambda_i}P_i$ for
+an Hermitian operator $A$ with the spectrum decomposition
+$\sum_i \lambda_i P_i$. Let $|A|$ be $\sqrt{A^\dagger A}$.
+
+\begin{defi}
+ Trace distance $d: \Delta(\H) \times \Delta(\H) \rightarrow [0,1]$ is
+ defined as 
+\[
+ d(\rho, \sigma) = \frac{1}{2}\mathrm{tr}|\rho - \sigma|.
+\]
+\end{defi}
+If $\tr{}{\rho} = \tr{}{\sigma} = 1$, trace distance can be thought as
+a generalization of Kolmogorov distance.
+Indeed, if $\rho$ and $\sigma$ are diagonal with respect to
+orthonormal basis
+$\{\ket{i}\}_{i}$, then $\rho = \sum_i p_i \ket{i}\bra{i}$,
+$\rho = \sum_i q_i \ket{i}\bra{i}$, and $d(\rho,\sigma) = 
+\frac{1}{2}\sum_i |p_i - q_i|$ hold for some unique $p_i$'s and $q_i$'s
+satisfying $\sum_i p_i = \sum_i q_i = 1$.
+We introduce some useful properties of trace distance as follows.
+
+\begin{prop}
+\label{par:trdismax}
+ If $\tr{}{\rho} = \tr{}{\sigma} = 1$ holds, then 
+\[
+ d(\rho, \sigma) = 
+ \max\{\tr{}{P\rho} - \tr{}{P\sigma}\,|\, P \mbox{ is a projector.}\}
+\]
+holds.
+\end{prop}
+
+\begin{prop}
+\label{par:tpcpnonincrease}
+If $\tr{}{\rho} = \tr{}{\sigma} = 1$ holds, then
+ $d(\E(\rho), \E(\sigma))
+\le d(\rho, \sigma)$ holds for all TPCP map $\E$.
+\end{prop}
+Proposition \ref{par:tpcpnonincrease}
+can be extended to trace non-increasing cases.
+In the proof, we use the fact that $\mathrm{tr}|\cdot|$ is a
+norm on a set of linear operators.
+
+\begin{prop}
+\label{par:positivenonincrease}
+ $d(\E(\rho), \E(\sigma)) \le d(\rho, \sigma)$ for all
+ trace non-increasing positive map $\E$.
+\end{prop}
+
+\begin{proof}
+ Let $\sum_i \lambda_i \ket{i}\bra{i}$ be an arbitrary eigenvalue
+ decomposition of $\rho - \sigma$. 
+ We obtain the proposition by the following calculation.
+ \begin{align*}
+  \mathrm{tr}|\E(\rho - \sigma)|
+  &= \mathrm{tr}|\sum_i \lambda_i \E(\ket{i}\bra{i})| \\
+  &\le \sum_i |\lambda_i| \cdot \mathrm{tr}|\E(\ket{i}\bra{i})| 
+  &&\mbox{(by the axiom of trace norm)}\\
+  &\le \sum_i |\lambda_i| \cdot \mathrm{tr}(\ket{i}\bra{i})
+  &&\mbox{(} \E \mbox{ is trace non-increasing and positive.)}\\
+  &= \sum_i |\lambda_i| = \mathrm{tr}|\rho - \sigma|
+ \end{align*}
+\end{proof}
+
+For a configuration $\con{P}{\rho} \in \C$, $\tr{}{\rho}$ is 
+interpreted
+as the probability to reach $\con{P}{\rho}$, and the quantum state  
+is $\frac{\rho}{\tr{}{\rho}}$.
+The next proposition 
+gives a way to interpret that $d(\rho, \sigma)$ is 
+small for two configurations $\con{P}{\rho}, \con{Q}{\sigma} \in \C$.
+\begin{prop}
+\label{par:trdisproperty}
+ Let $\rho, \sigma : \mathbb{N} \rightarrow \Delta(\H)$ be functions
+ and regard $d(\rho, \sigma):\mathbb{N} \rightarrow [0,1]$ 
+ as a function. $d(\rho, \sigma)$
+ is negligible iff $|\tr{}{\rho} - \tr{}{\sigma}|$ and
+ $\tr{}{\rho}\cdot d(\frac{\rho}{\tr{}{\rho}},
+ \frac{\sigma}{\tr{}{\sigma}})$ are negligible.
+\end{prop}
+
+\begin{proof}
+ $\mathrm{(\Rightarrow)}$ As $\tr{}{\cdot}$ is a TPCP map, $d(\rho,
+ \sigma) \ge d(\tr{}{\rho}, \tr{}{\sigma}) = \frac{1}{2}|\tr{}{\rho} - 
+ \tr{}{\sigma}|$. $|\tr{}{\rho} -  \tr{}{\sigma}|$ is negligible by
+ Proposition \ref{par:propneg}.
+ $\tr{}{\rho}\cdot d(\frac{\rho}{\tr{}{\rho}}, \frac{\sigma}{\tr{}{\sigma}})$
+ is shown to be negligible by the following calculation.
+ \begin{align*}
+  \tr{}{\rho}\cdot d(\frac{\rho}{\tr{}{\rho}}, \frac{\sigma}{\tr{}{\sigma}})
+  &\le \tr{}{\rho}\cdot (d(\frac{\rho}{\tr{}{\rho}},
+  \frac{\sigma}{\tr{}{\rho}}) + d(\frac{\sigma}{\tr{}{\rho}},
+  \frac{\sigma}{\tr{}{\sigma}}))\\
+  &= d(\rho, \sigma) + |\tr{}{\rho} -
+  \tr{}{\sigma}| \cdot \mathrm{tr}|\frac{\sigma}{\tr{}{\sigma}}|\\
+  &= d(\rho, \sigma) + |\tr{}{\rho} - \tr{}{\sigma}|
+ \end{align*}
+$\mathrm{(\Leftarrow)}$ By triangle inequality, we have
+$d(\rho, \frac{\tr{}{\rho}}{\tr{}{\sigma}}\sigma) + 
+ d(\frac{\tr{}{\rho}}{\tr{}{\sigma}}\sigma, \sigma)
+ \ge d(\rho, \sigma)$. This is equivalent to
+$\tr{}{\rho} \cdot d(\frac{\rho}{\tr{}{\rho}},
+ \frac{\sigma}{\tr{}{\sigma}}) + 
+ d(\frac{\tr{}{\rho}}{\tr{}{\sigma}}\sigma, \sigma)
+ \ge d(\rho, \sigma)$. The left-hand side is shown to be negligible
+ by the calculation $d(\frac{\tr{}{\rho}}{\tr{}{\sigma}}\sigma, \sigma)
+ = 
+|\tr{}{\rho} -
+  \tr{}{\sigma}| \cdot \mathrm{tr}|\frac{\sigma}{\tr{}{\sigma}}|$.
+\end{proof}
+
+For $\con{P}{\rho}, \con{Q}{\sigma}$, assume
+$d(\rho, \sigma)$ is negligible. It is equivalent to that
+$|\tr{}{\rho} - \tr{}{\sigma}|$ and $\tr{}{\rho} \cdot
+d(\frac{\rho}{\tr{}{\rho}}, \frac{\sigma}{\tr{}{\sigma}})$ are
+negligible. By Proposition \ref{par:trdismax}, 
+we have that $\tr{}{\rho} \cdot \tr{}{P\frac{\rho}{\tr{}{\rho}}} - 
+\tr{}{\rho} \cdot \tr{}{P\frac{\sigma}{\tr{}{\sigma}}}$ is negligible
+for all projector $P$. As $|\tr{}{\rho}$ - $\tr{}{\sigma}|$ is
+negligible, we have that
+$\tr{}{\rho} \cdot \tr{}{P\frac{\rho}{\tr{}{\rho}}} - 
+\tr{}{\sigma} \cdot \tr{}{P\frac{\sigma}{\tr{}{\sigma}}}$ is negligible.
+$\tr{}{\rho} \cdot \tr{}{P\frac{\rho}{\tr{}{\rho}}}$ is the joint
+probability that a process reaches $\con{P}{\rho}$ and observes
+the measurement result corresponding to the projector $P$.
+Therefore, that $d(\tr{}{\rho}, \tr{}{\sigma})$ is negligible implies
+that the difference of the joint probabilities is negligible for an
+arbitrary measurement.
+
+\section{Approximate Bisimulation up to Parameters}
+\label{par}
+We define the first approximate bisimulation relation.
+\begin{defi}
+\label{par:defofzetaetarel}
+ Let $0 \le \zeta, \eta \le 1$. A symmetric relation $\R \subseteq \C \times \C$
+ is called an $(\zeta,\eta)$-bisimulation if for all
+ $\con{P}{\rho},\con{Q}{\sigma}$,$\con{P}{\rho} \R \con{Q}{\sigma}$
+ implies 
+\begin{enumerate}
+ \item $\qv{P}=\qv{Q} \defeq \tilde q$,
+ \item $d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma}) \le \zeta$, and
+ \item for all CP map $\E_{\tilde r}$ acting on 
+       $\tilde r \subseteq \sfqv - \tilde q$,
+       if $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+       \con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \eta$ hold,
+       then $\con{Q}{\E_{\tilde r}(\sigma)} \xrightarrow{\tau*}
+       \xrightarrow{\hat \alpha}
+       \xrightarrow{\tau*} \con{Q'}{\sigma'}$ and
+       $\con{P'}{\rho'}\mathcal{R} \con{Q'}{\sigma'}$ hold for some
+       $\con{Q'}{\sigma'}$
+\end{enumerate}
+We call the conditions 1 and 2 the static conditions, and
+the condition 3 the simulation condition.
+\end{defi}
+Precisely in the condition 3, it is possible that $\E_{\tilde r}(\rho) = O
+\notin \Delta(\H)$ holds for some $\E_{\tilde r}$. We exclude such
+CP maps in our discussions.
+
+\begin{defi}
+\label{par:defofzetaeta}
+ We define 
+ \[
+ \sim_{\zeta, \eta} := \{(\C, \D) \in \Con \times \Con~|~
+ \C\R\D \mbox{ holds for some } (\zeta,\eta)\mbox{-bisimulation }
+ \R\}.
+ \]
+ We say $\con{P}{\rho}$ and $\con{Q}{\sigma}$
+ are $(\zeta, \eta)$-bisimilar if
+ $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$.
+\end{defi}
+The relation $\sim_{\zeta, \eta}$ has the similar properties
+as the bisimulation relations defined in qCCS or other process 
+calculi have \cite{Milner1999}.
+
+\begin{lem}
+\label{par:alsobisimulation}
+$\sim_{\zeta,\eta}$ is a ($\zeta,\eta$)-bisimulation.
+\end{lem}
+\begin{proof}
+By definition of $\sim_{\zeta, \eta}$, it is symmetric.
+By $\con{P}{\rho}\sim_{\zeta, \eta}\con{Q}{\sigma}$,
+there exists a $(\zeta, \eta)$-bisimulation
+$\R$ satisfying $\con{P}{\rho}\R\con{Q}{\sigma}$.
+The static conditions are easily checked.
+Next, we have that for all CP map $\E_{\tilde r}$ that acts on 
+$\tilde r \subseteq \sfqv - \qv{P}$, 
+ if $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha} \con{P'}{\rho'}$
+ and $\tr{}{\rho'} \ge \eta$ hold,
+ then there exists
+ $\con{Q'}{\sigma'}$ satisfying
+ $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha} \con{Q'}{\sigma'}$
+ and 
+ $\con{P'}{\rho'}\R\con{Q'}{\sigma'}$.
+ This implies
+ $\con{P'}{\rho'}\sim_{\zeta, \eta}\con{Q'}{\sigma'}$.
+\end{proof}
+
+\begin{lem}
+\label{prob_bisim:parcoinduction}
+ $\con{P}{\rho} \sim_{\zeta,\eta} \con{Q}{\sigma}$ if and
+ only if 
+\begin{enumerate}
+ \item $\qv{P}=\qv{Q} \defeq \tilde q$,
+ \item $d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma})  \le \zeta$,
+ \item and for all CP map $\E_{\tilde r}$ acting on 
+       $\tilde r \subseteq \sfqv - \tilde q$,
+       \begin{itemize}
+	\item
+	     if $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+	     \con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \eta$ hold,
+	     then
+	     $\con{Q}{\E_{\tilde r}(\sigma)} 
+	     \xrightarrow{\tau*}
+	     \xrightarrow{\hat \alpha}
+	     \xrightarrow{\tau*} \con{Q'}{\sigma'}$ and
+	     $\con{P'}{\rho'} \sim_{\zeta, \eta}
+	     \con{Q'}{\sigma'}$ hold
+	     for some  $\con{Q'}{\sigma'}$
+	\item
+	     if $\con{Q}{\E_{\tilde r}(\sigma)} \xrightarrow{\alpha}
+	     \con{Q'}{\sigma'}$ and $\tr{}{\sigma'} \ge \eta$ hold,
+	     then
+	     $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\tau*}
+	     \xrightarrow{\hat \alpha}
+	     \xrightarrow{\tau*} \con{P'}{\rho'}$ and
+	     $\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$
+	     hold for some
+	     $\con{P'}{\rho'}$
+       \end{itemize}
+\end{enumerate}
+\end{lem}
+\begin{proof}
+ ($\Rightarrow$) proven as the previous lemma.\\
+ ($\Leftarrow$) We define $\hat \R\,:=\,\sim_{\zeta, \eta}\cup 
+\{(\con{P}{\rho}, \con{Q}{\sigma} ) \} \cup \{(\con{Q}{\sigma},
+ \con{P}{\rho}) \}$. $\hat \R$ is symmetric by the definition.
+ It is sufficient to show $\hat
+ \R$ is a ($\zeta, \eta$)-bisimulation relation. Let
+ $(\con{P_0}{\rho_0},
+ \con{Q_0}{\sigma_0})$
+ be an arbitrary element of $\hat \R$.
+ \begin{enumerate}
+  \item  Suppose $(\con{P_0}{\rho_0}, \con{Q_0}{\sigma_0}) \in
+	 \sim_{\zeta, \eta}$. Since $\sim_{\zeta, \eta}$
+	 is a $(\zeta, \eta)$-bisimulation, the static
+	 conditions are satisfied. Next, let
+	 $\E_{\tilde r}$ be an arbitrary CP map acting on 	
+	 $\tilde r \subseteq \sfqv - \qv{P_0}$, and assume
+	 $\con{P_0}{\E_{\tilde r}(\rho_0)} 
+	 \xrightarrow{\alpha}
+	 \con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \eta$ hold.
+	 By the previous lemma,
+	 we have
+	 $\con{Q_0}{\E_{\tilde r}(\sigma_0)}
+	 \xrightarrow{\tau*}
+	 \xrightarrow{\hat \alpha}
+	 \xrightarrow{\tau*} \con{Q'}{\sigma'}$ and
+	 $\con{P'}{\rho'}\sim_{\zeta, \eta}
+	 \con{Q'}{\sigma'}$
+	 for some
+	 $\con{Q'}{\sigma'}$.
+	 This implies $\con{Q_0}{\E_{\tilde r}(\sigma_0)}
+	 \xrightarrow{\tau*}
+	 \xrightarrow{\hat \alpha}
+	 \xrightarrow{\tau*} \con{Q'}{\sigma'}$ and
+	 $\con{P'}{\rho'}\hat \R
+	 \con{Q'}{\sigma'}$
+	 for some $\con{Q'}{\sigma'}$ since 
+	 $\sim_{\zeta, \eta} \subseteq \hat \R$.
+  \item Suppose $(\con{P_0}{\rho_0},
+	\con{Q_0}{\sigma_0}) = (\con{P}{\rho}, \con{Q}{\sigma})$.
+	The static conditions are easily checked.
+	The simulation condition holds by the assumption and
+	$\sim_{\zeta, \eta} \subseteq \hat \R$.
+  \item Suppose $(\con{P_0}{\rho_0},
+	\con{Q_0}{\sigma_0}) = (\con{Q}{\sigma}, \con{P}{\rho})$.
+	The proof is similar to the previous case.
+ \end{enumerate}
+\end{proof}
+
+\begin{prop}
+\label{par:sym-by-par}
+ $\con{P||Q}{\rho} \sim_{0, 0} \con{Q||P}{\sigma}$.
+\end{prop}
+\begin{proof}
+ This is proved by the definition of the transition rules, where
+ (Left) and (Right) rules are symmetric.
+\end{proof}
+
+\begin{lem}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ and 
+$\con{P}{\rho} \xrightarrow{\tau\ast} \con{P'}{\rho'}$ and
+ $\tr{}{\rho'} \ge \eta$, then
+$\con{Q}{\sigma} \xrightarrow{\tau\ast}
+ \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$ hold
+ for some $\con{Q'}{\sigma'}$.
+\end{lem}
+\begin{proof}
+ Assume $\con{P}{\rho} \xrightarrow{\tau}^n \con{P'}{\rho'}$
+ and let $\con{P_i}{\rho_i}$ be $i$-th configuration with $0 \le i \le
+ n$. The case when $n = 0$ is trivial. Let $n > 0$.
+ Since $\rho = \rho_0 \ge \rho_1 \ge \cdots \ge \rho_n =
+ \rho'$ and $\tr{}{\rho'} \ge \eta$ hold, 
+ $\tr{}{\rho_i} \ge \eta$ holds for all $i$. Therefore,
+ $\con{Q}{\sigma} \xrightarrow{\tau\ast}^n
+ \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$ hold
+ for some $\con{Q'}{\sigma'}$.
+\end{proof}
+
+\begin{lem}
+\label{par:weaksimulated}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$
+ and $\con{P}{\rho} \weak{\hat \alpha} \con{P'}{\rho'}$ and
+ $\tr{}{\rho'} \ge \eta$ hold, then 
+ $\con{Q}{\sigma} \weak{\hat \alpha} \con{Q'}{\sigma'}$ and
+ $\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$ hold for some
+ $\con{Q'}{\sigma'}$.
+\end{lem}
+\begin{proof}
+ It is proven similarly to the previous lemma.
+\end{proof}
+
+The relation $\sim_{\zeta, \eta}$ is closed under application
+of an arbitrary CP map by the outsider,
+namely, one acts on $\sfqv - \tilde q$.
+This is one of the 
+similar properties as the original qCCS's largest 
+bisimulation relation $\approx$ has \cite{DengFeng2012}.
+\begin{lem}
+\label{par:cpclosed}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$,
+ then $\con{P}{\E_{\tilde r}(\rho)} \sim_{\zeta, \eta}
+ \con{Q}{\E_{\tilde r}(\sigma)}$ holds for all 
+ CP map $\E$ acting on $\tilde r \subseteq \sfqv - \qv{P}$.
+\end{lem}
+\begin{proof}
+ We use $(\Leftarrow)$ implication of Lemma
+ \ref{prob_bisim:parcoinduction}.
+ By Lemma \ref{par:positivenonincrease},
+ $d(\E_{\tilde r}(\rho), \E_{\tilde
+ r}(\sigma)) \leq d(\rho, \sigma)$ holds for all
+ CP map $\E_{\tilde r}$ and thus the static condition on partial trace holds.
+ Since $\E_{\hat r}$ ranges over arbitrary CP map in the definition,
+ the simulation condition holds.
+\end{proof}
+
+The relation $\sim_{\zeta, \eta}$ is reflexive and symmetric but
+not transitive because of the condition of trace distance. Instead,
+it has the following properties.
+\begin{prop}
+\label{par:transitivitylike}
+ \begin{enumerate}
+  \item If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$,
+	$\zeta \le \zeta'$, and $\eta \le \eta'$ hold, 
+	then $\con{P}{\rho} \sim_{\zeta', \eta'} \con{Q}{\sigma}$ holds.
+  \item If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ and
+	$\con{Q}{\sigma} \sim_{\zeta', \eta'} \con{R}{\theta}$ hold,
+	then
+	\[
+	 \con{P}{\rho} \sim_{\zeta + \zeta',\,\mathrm{max}\{\eta,
+	\eta'\} + 2(\zeta + \zeta')} \con{R}{\theta}
+	\] 
+	holds.
+ \end{enumerate}
+\end{prop}
+\begin{proof}
+ \begin{enumerate}
+  \item It is sufficient to prove that $\sim_{\zeta, \eta}$ is 
+	a $(\zeta', \eta')$-bisimulation. 
+	The relation $\sim_{\zeta, \eta}$ is symmetric by Lemma \ref{par:alsobisimulation}.
+	The static conditions is checked observing
+	$d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma}) \le
+	\zeta \le \zeta'$. For the simulation condition,
+	assume 
+	$\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+	\con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \eta'$
+	for a CP map $\E_{\tilde r}$. Since $\tr{}{\rho'} \ge \eta' \ge
+	\eta$, there exists a configuration $\con{Q'}{\sigma'}$
+	satisfying $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha} 
+	\con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim_{\zeta, \eta}
+	\con{Q'}{\sigma'}$.
+  \item We define a relation $\R \subseteq \C \times \C$ as follows.
+	\begin{align*}
+	 \R' :=& \{(\con{P}{\rho}, \con{R}{\theta})\,|\,
+	            \con{P}{\rho} \sim_{\zeta, \eta} \circ
+	 \sim_{\zeta', \eta'} \con{R}{\theta}\}\\
+	 \R := & \R' \cup \R'^{-1}
+	\end{align*}
+	The assumption implies $\con{P}{\rho} \R \con{R}{\theta}$.
+	It is sufficient to prove that $\R$ is a $(\max\{\eta,
+	\eta'\}+2(\zeta + \zeta'))$-bisimulation. By definition,
+	$\R$ is symmetric. \\
+	{\bf (Case 1)} Let an arbitrary element
+	$(\con{P}{\rho},\con{R}{\theta}) \in \R'$.
+	There exists $\con{Q}{\sigma}$ satisfying
+	$\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ and
+	$\con{Q}{\sigma} \sim_{\zeta', \eta'} \con{R}{\theta}$.
+	The static condition is checked observing
+	$d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\theta}) \le
+	d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma}) +
+	d(\tr{\tilde q}{\sigma}, \tr{\tilde q}{\theta}) \le
+	\zeta + \zeta'$. For the simulation condition, assume
+	$\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+	\con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \max\{\eta,
+	\eta'\}+2(\zeta + \zeta')$ for a CP map $\E_{\tilde r}$.
+	Since $\tr{}{\rho'} \ge \eta$ and
+ 	$\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$
+	hold, there exists
+	$\con{Q'}{\sigma'}$ satisfying
+	$\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha}
+	\con{Q'}{\sigma'}$ and
+	$\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$.
+	Applying Lemma \ref{par:cpclosed} to
+	$\con{Q}{\sigma} \sim_{\zeta', \eta'} \con{R}{\theta}$, we
+	have
+	$\con{Q}{\E_{\tilde r}(\sigma)} \sim_{\zeta', \eta'}
+	\con{R}{\E_{\tilde r}(\theta)}$. We also have
+	$\tr{}{\sigma'} \ge \tr{}{\rho'} - 2\zeta \ge \eta'$.
+	By Lemma \ref{par:weaksimulated}, there exists
+	$\con{R'}{\theta'}$
+	satisfying $\con{R}{\E_{\tilde r}(\theta)} \weak{\hat \alpha}
+	\con{R'}{\theta'}$ and $\con{Q'}{\sigma'} \sim_{\zeta', \eta'}
+	\con{R'}{\theta'}$. We also have $\con{P'}{\rho'} \R' \con{R'}{\theta'}$.
+	\\
+	{\bf (Case 2)} Let an arbitrary element
+	$(\con{R}{\theta}, \con{P}{\rho}) \in \R'^{-1}$.
+	The proof is similar to the previous case.
+ \end{enumerate}
+\end{proof}
+
+Examples of the relation are as follows.
+\begin{ex}
+\label{par:ex1}
+  \begin{align*}
+   (1)~~&\con{\measure{b}{\sndq{c}{b}.\discard{}}}
+   {\ket{+}\bra{+}_b \otimes \ket{+}\bra{+}_q}\\
+   \sim_{\frac{1}{2}, \frac{1}{2}}
+   &\con{\measure{b}{\sndq{c}{b}.\discard{}}}
+   {(\frac{1}{2}\ket{00}\bra{00} +
+   \frac{1}{2}\ket{11}\bra{11})_{b,q}} \mbox{ holds.}\\
+   (2)~~&\con{\measure{b}{\sndq{c}{q}.\discard{}}}
+   {\ket{\psi}\bra{\psi}_b \otimes \ket{0}\bra{0}_q}\\
+   \sim_{0, \frac{1}{4}}
+   &\con{\measure{b}{\sndq{c}{q}.\discard{}}}
+    {\ket{\psi}\bra{\psi}_b \otimes \ket{1}\bra{1}_q} \mbox{ holds,
+   where}\\
+   & \ket{\psi} = \frac{\sqrt{3}\ket{0} + \ket{1}}{2}
+  \end{align*}
+\end{ex}
+We prove that the relation $\sim_{\zeta, \eta}$ is
+closed under application of evaluation contexts.
+We first show that $\sim_{\zeta, \eta}$ is
+closed under restriction.
+\begin{lem}
+\label{par:resclosed}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ holds, then
+ $\con{P \backslash L}{\rho} \sim_{\zeta, \eta}
+ \con{Q \backslash L}{\sigma}$ holds.
+\end{lem}
+\begin{proof}
+\label{par:resclosed}
+ Let $\R := \{(\con{P \backslash L}{\rho}, \con{Q \backslash
+ L}{\sigma}) \,|\, \con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}\}$.
+ It is
+ sufficient to show that $\R$ is an approximate bisimulation relation.
+ $\R$ is symmetric by the definition.
+ Let $(\con{P \backslash L}{\rho}, \con{Q \backslash
+ L}{\sigma})$ be an arbitrary element of $\R$. The
+ static conditions are easily checked. Assume $\con{P \backslash
+ L}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha} \con{P' \backslash
+ L}{\rho'}$ and $\tr{}{\rho'} \ge \eta$.
+ This implies $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+ \con{P'}{\rho'}$ and $\mathrm{cn}(\alpha) \cap L = \emptyset$.
+ We have
+ $\con{P}{\E_{\tilde r}(\rho)} \sim \con{Q}{\E_{\tilde r}(\sigma)}$
+ from $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$. We then have 
+ $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha} \con{Q'}{\sigma'}$ 
+ and $\con{P'}{\rho'} \sim_{\zeta, \eta} \con{Q'}{\sigma'}$ for some
+ $\con{Q'}{\sigma'}$. As $\mathrm{cn}(\hat \alpha) \cap L = \emptyset$
+ and $\mathrm{cn}(\tau) = \emptyset$, we have 
+ $\con{Q \backslash L}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha}
+ \con{Q' \backslash L}{\sigma'}$ and 
+ $\con{P' \backslash L}{\rho'} \R \con{Q' \backslash L}{\sigma'}$. 
+\end{proof}
+
+The relation $\sim_{\zeta, \eta}$ is
+closed under parallel composition of the processes.
+
+\begin{thm}
+\label{par:pallaclosed}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ holds, 
+ $\con{P||R}{\rho} \sim_{\zeta, \eta} \con{Q||R}{\sigma}$ holds for
+ all process $R$.
+\end{thm}
+\begin{proof}
+\label{par:prfof-pallaclosed}
+ We define 
+\[
+ \hat \R := \{(\con{P||R}{\rho}, \con{Q||R}{\sigma})\,|\,
+ \con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}, R \in \mathcal{P}
+ \}. 
+\]
+ As $\sim_{\zeta, \eta}$ is symmetric, $\hat \R$ is symmetric.
+ It is sufficient to show $\hat \R$ is a 
+$(\zeta, \eta)$-bisimulation.
+ Let $(\con{P||R}{\rho}, \con{Q||R}{\sigma})$ be an arbitrary element
+ in $\hat \R$.
+ The static conditions are checked as follows. By the definition
+ of $\qv{\cdot}$ and the condition $\qv{P} = \qv{Q}$
+ obtained from $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$,
+ $\tilde q \defeq 
+ \qv{P||R}=\qv{P}\cup\qv{R}=\qv{Q}\cup\qv{R}=\qv{Q||R}$ holds.
+ Next, 
+ \begin{align*}
+ d(\tr{\tilde q}{\rho},
+ \tr{\tilde q}{\sigma})
+ = \, &
+ d(\tr{\qv{R}}{\tr{\qv{P}}{\rho}}, \tr{\qv{R}}{\tr{\qv{Q}}{\sigma}})\\
+ \le \, & d(\tr{\qv{P}}{\rho}, \tr{\qv{Q}}{\sigma}) \le \zeta.
+ \end{align*}
+ holds.
+ We then show that the simulation condition is satisfied.
+ Let $\E_{\tilde r}$ be an arbitrary TPCP map acting on $\tilde r
+ \subseteq \sfqv - \tilde q$.
+ A transition of a parallely-composed process is either the 
+ 3 cases by the transition rules.\\
+ {\bf (Case 1)}The transition is performed only by
+       $P$.
+       Assume $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+       \con{P'}{\rho'}$ and $\tr{}{\rho'} \ge \eta$ hold.
+       By $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$,
+       there exists $\con{Q'}{\sigma'}$ satisfying
+       $\con{Q}{\E_{\tilde r}(\sigma)} 
+       \weak{\hat \alpha} \con{Q'}{\sigma'}$ and
+       $\con{P'}{\rho'}\sim_{\zeta, \eta}\con{Q'}{\sigma'}$.
+       Therefore, $\con{Q||R}{\sigma}
+       \weak{\hat \alpha} \con{Q'||R}{\sigma'}$ holds by (Left) rule
+       and
+       $\con{P'||R}{\rho'} \hat \R \con{Q'||R}{\sigma'}$ holds
+       by the definition of $\hat \R$.\\
+ {\bf (Case 2)} The transition is performed only by
+       $\con{R}{\rho}$.
+       Assume $\con{R}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+       \con{R'}{\rho'}$ and $\tr{}{\rho'} \ge \eta$ hold.
+       Because $R$ has a redex that
+       causes the transition $\xrightarrow{\alpha}$,
+       $\con{Q||R}{\E_{\tilde r}(\sigma)}
+       \xrightarrow{\alpha} \con{Q||R'}{\sigma'}$ holds for some
+       $\sigma'$. It is sufficient to show
+       $\con{P}{\rho'} \sim_{\zeta, \eta} \con{Q}{\sigma'}$ by the
+       definition of $\hat \R$. 
+       $\rho' = \F_{\tilde s} \circ \E_{\tilde r}(\rho)$ and
+       $\sigma' = \F_{\tilde s} \circ \E_{\tilde r}(\sigma)$ hold
+       for some CP map $\F_{\tilde s}$ acting on $\tilde s \subseteq
+       \qv{R}$. As $\con{P}{\rho} \sim_{\zeta, \eta}
+       \con{Q}{\sigma}$ and $\tilde s, \tilde r \subseteq \sfqv - 
+       \qv{P}$ hold, $\con{P}{\rho'} \sim_{\zeta, \eta}
+       \con{Q}{\sigma'}$ holds by Lemma \ref{par:cpclosed}.
+       This implies $\con{P||R'}{\rho'} \hat \R
+       \con{Q||R'}{\sigma'}$.\\
+ {\bf (Case 3)} The transition is performed by 
+       communication of $P$ and $R$. As the communication rule is 
+       applied, the $P||R$ can be written as
+       $\con{C_1[\sndq{c}{q}.P']||C_2[\rcvq{c}{r}.R']}
+       {\E_{\tilde r}(\rho)}$
+       for some evaluation contexts $C_1[\_], C_2[\_]$, processes
+       $P', R'$, and
+       non-restricted channel $\mathsf{c}$.
+       The transition to consider is
+       \[
+       \con{C_1[\sndq{c}{q}.P']||C_2[\rcvq{c}{r}.R']}
+       {\E_{\tilde r}(\rho)}
+       \xrightarrow{\tau}
+       \con{C_1[P']||C_2[R']}{\E_{\tilde r}(\rho)}.
+       \]
+       Assume $\tr{}{\rho} \ge \eta$.
+       By $\con{C_1[\sndq{c}{q}.P']}{\rho}
+       \sim_{\zeta, \eta} 
+       \con{Q}{\sigma}$
+       and
+       $\con{C_1[\sndq{c}{q}.P']}{\E_{\tilde r}(\rho)}
+       \xrightarrow{\sndq{c}{q}}
+       \con{C_1[P']}{\E_{\tilde r}(\rho)}$,
+       $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\sndq{c}{q}}
+       \con{Q'}{\sigma'}$ and
+       $\con{C_1[P']}{\E_{\tilde r}(\rho)} \sim_{\zeta, \eta}
+       \con{Q'}{\sigma'}$ hold for some $\con{Q'}{\sigma'}$.
+       This implies $\mathsf{c}$ is not restricted in $Q$
+       and thus receive redex
+       $\rcvq{c}{r}$ in $C_2[\rcvq{c}{r}.R']$
+       can be react.
+       The reaction does not influence the quantum state $\sigma'$. 
+       Therefore,
+       \[
+         \con{Q||R}{\E_{\tilde r}(\sigma)} \xrightarrow{\tau \ast}
+         \con{Q'||C_2[R']}{\sigma'} \mbox{ and }
+         \con{C_1[P']||C_2[R']}{\E_{\tilde r}(\rho)} 
+         \hat \R
+         \con{Q'||C_2[R']}{\sigma'}
+       \]
+       hold by the definition of $\hat \R$.       
+\end{proof}
+By the two previous lemmas and Proposition \ref{par:sym-by-par},
+we have the following corollary.
+\begin{col}
+\label{par:congruence}
+ If $\con{P}{\rho} \sim_{\zeta, \eta} \con{Q}{\sigma}$ holds, 
+ $\con{C[P]}{\rho} \sim_{\zeta, \eta} \con{C[Q]}{\sigma}$ holds for
+ all non-aborting evaluation context $C[\_]$.
+\end{col}

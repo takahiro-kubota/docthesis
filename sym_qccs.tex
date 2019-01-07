@@ -1,0 +1,2709 @@
+\chapter{Automated Verification of Bisimilarity of qCCS configurations}
+\label{symqccs}
+\section{qCCS}
+We introduce the qCCS formal framework presented by Deng and Feng
+\cite{DengFeng2012}.
+Three data types $\mathit{Bool}, \mathit{Real}$, and $\mathit{Qbt}$ are
+used for booleans, real numbers, and qubits, respectively.
+Let $\mathit{cVar}$ be a countably infinite set for
+classical variables, and $\sfqv$ be a finite
+set\footnote{The set of quantum variables is
+countably infinite in the original qCCS and each element
+represents a qubit, not a qubit string.} $\sfqv$
+for quantum variables. $\mathit{cVar}$ and $\sfqv$ are
+ranged over by $x, y, z,...$ and $q, r,...$.
+For each $q \in \sfqv$, its qubit-length $|q|$ is defined.
+A finite sequence of quantum variables
+is written $\tilde q$. When $\tilde q = q_1,q_2,...,q_n$, 
+$|\tilde q|$ represents $|q_1| + |q_2| + \cdots + |q_n|$.
+A sequence $\tilde q = q_1,q_2,...,q_n$ may be regarded as a set
+$\{q_1,q_2,...,q_n\}$ implicitly when there is no fear of confusion.
+Let $\mathit{Exp}$ be a set of real expressions,
+and $\mathit{BExp}$ be a set of boolean expressions.
+$\mathit{Exp}$ is ranged over by $e, e',...$.
+$\mathit{BExp}$, ranged over by $b, b',...$, is composed of constants
+$\mathtt{true}, \mathtt{false}$, atomic expressions $e\,\mathrm
+{rel}\,e'$, and logical connectives $\neg, \wedge, \vee$, and
+$\rightarrow$, where $\mathrm{rel} \in \{>, <, \ge, \le, =\}$.
+
+Let $\mathit{cChan}$ be a set of
+classical channels, and $\mathit{qChan}$ be
+a set of quantum channels.
+$\mathit{cChan}$ is ranged over by $c,d,...$, and
+$\mathit{qChan}$ is ranged over by $\mathsf{c}, \mathsf{d},...$.
+
+For a Hilbert space $\H$, $\dim{(\H)}$ denotes the dimension of $\H$.
+For a linear operator $A:\H \rightarrow \H$, $\dim{(A)}$ denotes
+$\dim{(\H)}$. For a TPCP map $\E:\D(\H_A) \rightarrow \D(\H_B)$,
+$\dom{\E}$ and $\cod{\E}$ denote its domain $\D(\H_A)$ and codomain
+$\D(\H_B)$.
+For $e \in \mathit{Exp}$ and $b \in \mathit{BExp}$, $\braw{e}$ and
+$\braw{b}$ denote their evaluations.
+
+Let $\mathit{Op}$, ranged
+over by $\mathit{op}, \mathit{op}_1,...$, 
+be a set of identifiers of TPCP maps.
+For each $\mathit{op} \in \mathit{Op}$, 
+a corresponding TPCP map $\E^{\mathit{op}}$ satisfying
+$\dom{\E^{\mathit{op}}} = \cod{\E^{\mathit{op}}}$ is defined.
+
+\subsection{Syntax}
+While the original syntax of qCCS allows
+recursive definitions of processes, we restricted them for simplicity.
+The 
+sub-language is still expressive to describe protocols including 
+our target QKD protocols. We also eliminated the constructors of 
+choice $+$, tau $\tau.P$ and relabeling $P[f]$
+because we do not use them.
+\begin{defi}
+The syntax of qCCS process is given as follows.
+\begin{align*}
+ \mathit{Proc} \ni P,Q &::= ~\nil ~|~ c?x.P ~|~ c!e.P ~|~
+\rcvq{c}{q}.P ~|~\sndq{c}{q}.P \\
+ ~|~ \myif{b&}{P}
+ ~|~ \mathit{op}[\tilde q].P ~|~ M[\tilde q;x].P~|~P||Q~|~P\backslash L
+\end{align*}
+where $M$ is an Hermitian operator and 
+$L$ is a set of channels.
+
+The set of quantum free variables in a process $P$, denoted
+by $\qv{P}$, is inductively defined as follows. 
+\begin{align*}
+ &\qv{\nil} = \emptyset
+ &&\qv{c!e.P} = \qv{P}\\
+ &\qv{c?x.P} = \qv{P}
+ &&\qv{\sndq{c}{q}.P} = \{q\} \cup \qv{P}\\
+ &\qv{\rcvq{c}{q}.P} = \qv{P} - \{q\}
+ &&\qv{\myif{b}{P}} = \qv{P}\\
+ &\qv{\mathit{op}[\tilde q].P} = \tilde q \cup \qv{P}
+ &&\qv{M[\tilde q;x].P} = \tilde q \cup \qv{P}\\
+ &\qv{P||Q} = \qv{P} \cup \qv{Q}
+ &&\qv{P \backslash L} = \qv{P}
+\end{align*}
+The constructors $c?x, M[\tilde q;x]$, and $\rcvq{c}{q}$ bind
+a classical variable $x$ and a quantum variable $q$.
+Bound quantum variables in $P$ is denoted $\mathrm{qbv}(P)$.
+
+For a process to be legal, the following conditions are required.
+\begin{enumerate}
+\item $\sndq{c}{q}.P \in \Proc$ only if $q \notin \qv{P}$,
+\item $P||Q \in \Proc$ only if $\qv{P} \cap \qv{Q} = \emptyset$.
+\end{enumerate}
+\end{defi}
+We explain intuitive meanings of the constructors. The process $\nil$
+does nothing. The process $c?x.P$ receives a value of the type 
+$\mathit{Real}$ through the channel $c$, binds it to the variable $x$,
+and executes $P$. The process
+$c!e.P$ sends a value that is obtained evaluating the
+expression $e$ through the channel $c$, and executes $P$. The process
+$\rcvq{c}{q}.P$
+receives a qubit through the channel $\mathsf{c}$, and executes $P$.
+The process $\sndq{c}{q}.P$
+sends a qubit indicated by the quantum variable $q$ through the channel
+$\mathsf{c}$, and executes $P$. The requirement {\it 1} says that
+a qubit string, which is a physical object, becomes inaccessible after one
+sends it.
+The process $\myif{b}{P}$ executes $P$ iff the evaluation of the 
+condition $b$ is $\mathit{true}$. The process
+$\mathit{op}[\tilde q].P$ performs the corresponding 
+TPCP map $\E^{\mathit{op}}$ to
+the Hilbert space indicated by $\tilde q$, and executes $P$.
+The process $M[\tilde q;x].P$ measures an observable $M$ of
+the quantum state indicated by $\tilde q$, stores the result of the
+measurement into a classical variable $x$, and executes $P$. 
+The process $P||Q$ executes the process $P$ and $Q$ in parallel.
+The requirement {\it 2} means that $P$ and $Q$ do not share quantum
+systems.
+The process $P \backslash L$ executes the process $P$ with private 
+channels in $L$. 
+
+For a classical variable $x$ and a value $v$ of
+the type $\mathit{Real}$, $P\subst{v}{x}$ is the process obtained
+replacing $x$ with $v$.
+For quantum variables $q$ and $r$,
+$P\subst{r}{q}$ is the process obtained
+replacing $q$ with $r$.
+
+\begin{ex} Examples of the processes are as follows,
+\label{symqccs:processex}
+ \begin{align*}
+  &\sndq{c}{r}. M_1[q;x].\nil\\
+  &\mathtt{measure}[r]. \sndq{c}{r}. \nil\\
+  &M_1[q;x].M_2[r,s;y].\myif{x + y \le
+	4}{(c!(x+y).\sndq{c}{r}.\nil||
+	c?z.d!z.\rcvq{d}{t}.\nil)}\backslash\{c\}
+ \end{align*}
+where $x, y \in \mathit{cVar}$, $q,r,s,t \in \sfqv$, $c, d \in
+ \mathit{cChan}$, $\mathsf{c}, \mathsf{d} \in
+ \mathit{qChan}$. $M_1 = \ket{1}\bra{1}$ and
+ $M_2 = \ket{001}\bra{001} + 2(\ket{010}\bra{010}
+ + \ket{011}\bra{011})
+ + 6\ket{110}\bra{110}$
+ with $|q|=|r|=|t|=1$ and $|s|=2$.
+ $\mathtt{measure} \in \mathit{Op}$ corresponds a 
+ TPCP map
+ $\E^{\mathtt{measure}}(\rho) = \ket{0}\bra{0}\rho\ket{0}\bra{0} +
+\ket{1}\bra{1}\rho\ket{1}\bra{1}$.
+\end{ex}
+
+\subsection{Semantics}
+For each $q \in \sfqv$, there assumed to be a corresponding $2^{|q|}$
+dimensional
+Hilbert space $\mathcal{H}_q$.
+For $\tilde q = q_1,q_2,...,q_l$, let $\H_{\tilde q}$ be $\H_{q_1}
+\otimes \H_{q_2} \otimes \cdots \otimes \H_{q_l}$.
+Let $\mathcal{H}_S=\bigotimes_{q \in {\it S}} \mathcal{H}_q$ for $S
+\subseteq \sfqv$ and let $\H = \H_{\sfqv}$
+\footnote{As assumed in Chapter \ref{prel}, we identify $H_1 \otimes
+H_2$ with $H_2 \otimes H_1$ for Hilbert spaces $H_1$ and $H_2$.
+Therefore, the order of $\H_{q}$ with respect to $\otimes$ for $q \in S$
+is not significant here.}.
+Let $\mathcal{D}(\mathcal{H})$, ranged over by $\rho, \sigma,...$, be the
+set of all density operators on $\H$.
+For a process to be legal with respect to 
+the semantics, the following conditions are additionally required.
+\begin{enumerate}
+\setcounter{enumi}{2}
+ \item $\mathit{op}[\tilde q].P \in \Proc$
+       only if $\dom{\E^{\mathit{op}}} =
+       \D(\H_{\tilde q})$,
+ \item $M[\tilde q;x].P \in \Proc$ only if $\dom{M} = \H_{\tilde q}$,
+\end{enumerate}
+For $\E^{\mathit{op}}$ with $\dom{\E^{\mathit{op}}} = \H_{\tilde q}$,
+let $\E^{\mathit{op}}_{\tilde q}:\D(\H) \rightarrow \D(\H)$ be
+$I_{\D(\H_S)} \otimes \E^{\mathit{op}} \otimes I_{\D(\H_T)}$
+for $S \cup T =
+\sfqv - \tilde q$, where $I_{\D(\H_S)}$ and $I_{\D(\H_T)}$ are identity
+operators on
+$\D(\H_{S})$ and $\D(\H_{T})$.
+Similarly, for an Hermitian operator $M:\H_{\tilde q} \rightarrow
+\H_{\tilde q}$ with spectrum decomposition $M = \sum_{i} \lambda_i E^i$,
+$E^i_{\tilde q}:\H \rightarrow \H$ is defined as
+$I_{\H_S} \otimes E^i_{\tilde q} \otimes I_{\H_T}$.
+
+Let $\Con = \Proc \times \D(\H)$. An
+element of $\Con$ is called a configuration.
+A configuration consisting of $P \in \Proc$ and $\rho \in \D(\H)$
+is written $\con{P}{\rho}$\footnote{In \cite{FengDuanJiYing2007,
+Ying2009, FengDuanYing2011, DengFeng2012,
+FengDengYing2012}, a configuration is written
+$\langle P, \rho \rangle$ using angle brackets. In this thesis,
+we write $\con{P}{\rho}$ since we frequently write density operators using
+bra-ket notation.}.
+
+\begin{ex} 
+Examples of the configurations are as follows,
+  \begin{align*}
+  &\con{\sndq{c}{r}. M_1[q;x].\nil}{\mathit{EPR}_{q,r}
+   \otimes \ket{01}\bra{01}_s \otimes \ket{-}\bra{-}_t}\\
+  &\con{\mathtt{measure}[r]. \sndq{c}{r}. \nil}
+   {\mathit{EPR}_{q,r} \otimes \ket{00}\bra{00}_s
+   \otimes \ket{+}\bra{+}_t}\\
+  &\con{M_1[q;x].M_2[r,s;y].\myif{x + y \le
+	4}{(c!(x+y).\sndq{c}{r}.\nil||
+	c?z.d!z.\rcvq{d}{t}.\nil)}\backslash\{c\}}
+   {\\&\ket{+}\bra{+}_q \otimes \ket{+}\bra{+}_r \otimes \ket{10}\bra{10}_s
+   \otimes \ket{0}\bra{0}_t}
+ \end{align*}
+where the sets $\mathit{cVar}$,
+$\mathit{qVar}$, $\mathit{Op}$,
+and the Hermitian operators $M_1$ and $M_2$
+are defined in Example \ref{symqccs:processex}.
+\end{ex}
+
+qCCS has a nondeterministic and 
+finite-support probabilistic transition system.
+The set of all finite-support 
+probability distribution on $\mathit{Con}$ is denoted $D(\mathit{Con})$,
+which is ranged over by $\mu, \nu,...$.
+Namely,
+\begin{align*}
+D(\Con)=\{\mu &\,|\, \sum_{\con{P}{\rho} \in \Con}
+\mu(\con{P}{\rho}) = 1, \mbox{ and for only finitely many }
+\con{P}{\rho},\\
+&\mbox{we have } \mu(\con{P}{\rho}) > 0 \}. 
+\end{align*}
+For $\mu \in D(\Con)$, we write
+$\mu = \boxplus_{i \in I} p_i \bullet \con{P_i}{\rho_i}$ if
+$\mu(\con{P_i}{\rho_i}) = p_i$ and $\sum_{i \in I} p_i = 1$ hold.
+For a point distribution, we may simply write $\con{P}{\rho}$ instead of
+$1 \bullet \con{P}{\rho}$.
+We also write $\mu = \sum_{i \in I} p_i \mu_i$ if $\mu(\con{P}{\rho}) =
+\sum_{i \in
+I} p_i \mu_i(\con{P}{\rho})$ for all $\con{P}{\rho} \in \Con$ and $\mu_i
+\in D(\Con)$.
+
+Let the set of actions $\mathit{Act}_{\tau}$, ranged over by
+$\alpha,...$, be $\{c?v, c!v, \sndq{c}{q}, \rcvq{c}{q} \,|\,
+c \in \mathit{cChan}, \mathsf{c} \in \mathit{qChan}, 
+v \mbox{ is of the type } \mathit{Real}, q \in \sfqv\} \cup {\tau}$.
+Channel name $\mathrm{cn}(\alpha)$ in $\alpha$
+is defined as $\mathrm{cn}(c?v) =
+\mathrm{cn}(c!v) = \{c\}$, $\mathrm{cn}(\sndq{c}{q}) =
+\mathrm{cn}(\rcvq{c}{q}) = \{\mathsf{c}\}$, and
+$\mathrm{cn}(\tau) = \emptyset$.
+Quantum bound variable $\mathrm{qbv}(\alpha)$ in $\alpha$ is defined as
+$\mathrm{qbv}(c!v) = \mathrm{qbv}(c?v) =
+\mathrm{qbv}(\sndq{c}{q}) = 
+\mathrm{qbv}(\tau) = \emptyset$, and
+$\mathrm{qbv}(\rcvq{c}{q}) = \{q\}$.
+
+\begin{defi}
+The relation of transitions $\rightarrow \subseteq \Con \times
+\mathit{Act}_\tau \times D(\Con)$
+is defined by the rules in Figure \ref{fig:qccs-ltr}.
+We regard $\xrightarrow{\alpha}$ as the subset of
+$\Con \times D(\Con)$ for fixed $\alpha$.
+The relation $\xrightarrow{\hat \alpha} \subseteq \Con \times D(\Con)$
+is defined as follows.
+\[
+ \xrightarrow{\hat \alpha} := \begin{cases}
+			       \xrightarrow{\tau} \cup \{(\con{P}{\rho},
+			       1\bullet
+			       \con{P}{\rho})\}~~~&(\alpha
+			       \mbox{ is } \tau)\\
+			       \xrightarrow{\alpha}~~~&(\mbox{otherwise})
+			      \end{cases} 
+\]
+\end{defi}
+\begin{figure}
+\begin{align*}
+&\frac{ v \mbox{ is of the type } \mathit{Real}
+}
+{
+~\con{c?x.P}{\rho} \xrightarrow{c?v}
+ \con{P\brac{v/x}}{\rho}~
+}(\mbox{C-Inp})~~~~~
+\frac{
+ \braw{e} = v
+}
+{
+~\con{c!e.P}{\rho} \xrightarrow{c!v}
+ \con{P}{\rho}~
+}(\mbox{C-Outp})\\
+\\
+&~\frac{\con{P_1}{\rho} \xrightarrow{c!v} \con{P_1'}{\rho}~~
+\con{P_2}{\rho} \xrightarrow{c?v} \con{P_2'}{\rho}~
+}
+{
+\con{P_1||P_2}{\rho} \xrightarrow{\tau} \con{P_1'||P_2'}{\rho}
+}(\mbox{C-Com})
+\\
+\\
+&\frac{
+~r \notin \qv{P}\backslash{\{q\}}
+}
+{
+~\con{\rcvq{c}{q}.P}{\rho} \xrightarrow{\rcvq{c}{r}}
+ \con{P\brac{r/q}}{\rho}~
+}(\mbox{Q-Inp})~~~~~
+\frac{
+}
+{
+~\con{\sndq{c}{q}.P}{\rho} \xrightarrow{\sndq{c}{q}}
+ \con{P}{\rho}~
+}(\mbox{Q-Outp})
+\\
+\\
+&\frac{
+}
+{
+~\con{\mathit{op}[\tilde q].P}{\rho} \xrightarrow{\tau}
+ \con{P}{\E^{\mathit{op}}_{\tilde q}(\rho)}~
+}(\mbox{Oper})~
+\frac{
+\con{P_1}{\rho} \xrightarrow{\rcvq{c}{r}} \con{P'_1}{\rho}\,
+\con{P_2}{\rho} \xrightarrow{\sndq{c}{r}}
+ \con{P'_2}{\rho}
+}
+{
+\con{P_1||P_2}{\rho} \xrightarrow{\tau}
+ \con{P'_1||P'_2}{\rho}
+}(\mbox{Q-Com})
+\\
+\\
+&\frac{
+\con{P}{\rho} \xrightarrow{\alpha} \mu,
+\braw{b} = \mathit{true}
+}
+{
+~\con{\myif{b}{P}}{\rho} \xrightarrow{\alpha} \mu
+}(\mbox{Cho})
+~~~~~
+\frac{\con{P}{\rho} \xrightarrow{\alpha}
+ \boxplus_i p_i \bullet \con{P_i}{\rho_i}
+~~\mathrm{cn}(\alpha) \cap
+ L = \emptyset}
+{\con{P \backslash L}{\rho} \xrightarrow{\alpha} 
+ \boxplus_i p_i \bullet \con{P_i \backslash L}{\rho_i} }(\mbox{Res})
+\\
+\\
+&\frac{
+\con{P}{\rho} \xrightarrow{\alpha}
+\boxplus_i p_i \bullet\con{P'_i}{\rho_i}~\mathrm{qbv}(\alpha) \cap
+ \mathrm{qv}(Q) = \emptyset
+}
+{
+~\con{P||Q}{\rho} \xrightarrow{\alpha}
+\boxplus_i p_i \bullet\con{P'_i||Q}{\rho_i}
+}(\mbox{IntL})\\
+\\
+&\frac{
+\con{P}{\rho} \xrightarrow{\alpha}
+\boxplus_i p_i \bullet\con{P'_i}{\rho_i}~\mathrm{qbv}(\alpha) \cap
+ \mathrm{qv}(Q) = \emptyset
+}
+{
+~\con{Q||P}{\rho} \xrightarrow{\alpha}
+\boxplus_i p_i \bullet\con{Q||P'_i}{\rho_i}
+}(\mbox{IntR})\\
+\\
+&\frac{
+}
+{
+~\con{M[\tilde r;x].P}{\rho} \xrightarrow{\tau}
+ \sum_i p_i \bullet \con{P\brac{\lambda_i/x}}
+{E^i_{\tilde r} \rho E^i_{\tilde r}/p_i}~
+}(\mbox{Meas})\\
+&\mbox{where }M\mbox{ has the spectrum decomposition}\\
+&M = \sum_i \lambda_i E^i,~{\rm and}
+~p_i = \mathrm{tr}(E^i_{\tilde r}\rho)
+\end{align*}
+\caption{Labelled Transition Rule}
+\label{fig:qccs-ltr}
+\end{figure}
+
+\begin{figure}[htbp]
+ \begin{center}
+  \includegraphics[width=110mm]{transex1.png}
+ \end{center}
+ \caption{Examples of the Transitions (1)}
+ \label{fig:transex1}
+\end{figure}
+\begin{figure}[htbp]
+ \begin{center}
+  \includegraphics[width=130mm]{transex2.png}
+ \end{center}
+ \caption{Examples of the Transitions (2)}
+ \label{fig:transex2}
+\end{figure}
+
+\begin{ex} Examples of the transitions are described in Figure
+ \ref{fig:transex1} and \ref{fig:transex2}.
+\end{ex}
+
+\subsection{Lifting Relations}
+To define weak
+bisimilarity, the relations of transitions $\xrightarrow{\alpha},
+\xrightarrow{\hat \alpha}
+\subseteq \Con \times D(\Con)$ are lifted to subsets of $D(\Con)
+\times
+D(\Con)$. We introduce the definitions by
+Deng and Feng \cite{DengFeng2012} here with some of the useful
+properties.
+Some definitions are rephrased in equivalent forms.
+
+\begin{defi}
+ For $\R \subseteq \Con \times D(\Con)$, its lifted
+ relation $\R^\dagger \subseteq D(\Con) \times
+ D(\Con)$ is defined as the smallest relation that satisfies
+ \begin{itemize}
+  \item $\con{P}{\rho} \R \mu$ implies
+	$1 \bullet \con{P}{\rho} \R^\dagger \mu$,
+	and
+  \item (Linearity) $\mu_i \R^\dagger \nu_i$
+	for any $i \in I$ implies
+	$\sum_{i \in I}p_i \mu_i \R^\dagger
+	\sum_{i \in I}p_i \nu_i$ for any $p_i \in [0,1]$ with 
+	$\sum_{i \in I} p_i = 1$, where $I$ is a finite
+	index set.
+ \end{itemize}
+\end{defi}
+
+\begin{prop}
+ $\mu \R^\dagger \nu$ if and only if there is a 
+ finite set $I$ such that
+ \begin{itemize}
+  \item $\mu = \sum_{i \in I} p_i \con{P_i}{\rho_i}$,
+  \item $\nu = \sum_{i \in I} p_i \nu_i$,
+  \item $\con{P_i}{\rho_i} \R \nu_i$ for all
+	$i \in I$.
+ \end{itemize}
+\end{prop}
+
+$\R^\dagger$ may be simply written
+ $\R$. We have that
+$\con{P}{\rho} \xrightarrow{\alpha} \mu$ implies 
+$\con{P}{\rho} (\xrightarrow{\alpha})^\dagger \mu$. 
+The converse is not true. Indeed, $\con{c!1.\nil||c!1.\nil}{\rho}
+ (\xrightarrow{c!1})^\dagger \frac{1}{2}\con{\nil||c!1.\nil}{\rho} \boxplus
+\frac{1}{2}\con{c!1.\nil||\nil}{\rho}$ holds but the statement does not
+ hold that is obtained replacing $(\xrightarrow{c!1})^\dagger$ to 
+$\xrightarrow{c!1}$.
+
+The internal action is then defined. It represents actions that are
+not observed by the outsider and is important to define weak bisimilarity.
+\begin{defi}
+The internal action $\Rightarrow \subseteq
+D(\Con) \times D(\Con)$ is defined as $((\xrightarrow{\hat
+ \tau})^\dagger)^{\ast}$.
+\end{defi}
+
+\begin{prop}
+ The relation 
+ $\Rightarrow \xrightarrow{\hat \tau} \Rightarrow$ is equal to
+ $\Rightarrow$.
+ The relation $\Rightarrow \xrightarrow{\hat \alpha} \Rightarrow$
+ is linear for all $\alpha$.
+\end{prop}
+
+
+Relations on $\Con$ is also lifted to those on $D(\Con)$.
+
+\begin{defi}
+For $\R \subseteq \Con \times \Con$, $\R^\dagger \subseteq D(\Con) \times
+D(\Con)$ is defined as
+\begin{align*}
+ \{(\mu, \nu) \,|\, & \exists I:\mbox{finite index set}.\,\mu = \sum_{i \in
+ I}p_i \con{P_i}{\rho_i}, \nu = \sum_{i \in I} p_i \con{Q_i}{\sigma_i},\\
+ &\forall i \in I. \, \con{P_i}{\rho_i} \R \con{Q_i}{\sigma_i}\}.
+\end{align*}
+\end{defi}
+
+\begin{prop}
+  For $\R \subseteq \Con \times \Con$, $\R^\dagger \subseteq D(\Con) \times
+D(\Con)$ is linear.
+\end{prop}
+
+\subsection{Bisimulation}
+The strong and weak open bisimulation relation of qCCS configurations
+defined by
+Deng and Feng \cite{DengFeng2012} is introduced.
+Let $\H_{\overline{\qv{P}}}$ be $\bigotimes_{q \in \mathit{\sfqv}-
+\qv{P}}\H_q$.
+
+\begin{defi}
+A relation $\R \subseteq \Con \times \Con$ is a strong simulation
+ if
+ $\con{P}{\rho} \R \con{Q}{\sigma}$
+implies $\qv{P}=\qv{Q}$, $\tr{\qv{P}}{\rho}=\tr{\qv{Q}}{\sigma}$ and
+for all TPCP map $\E$ that acts on $\H_{\overline{\qv{P}}}$,
+\begin{itemize}
+\item whenever $\con{P}{\E(\rho)} \xrightarrow{\alpha} \mu$,
+      there exists $\nu$ such that
+      $\con{Q}{\E(\sigma)}
+      \xrightarrow{\alpha} \nu$ and $\mu \R^\dagger
+      \nu$.
+\end{itemize}
+$\R$ is a strong bisimulation if $\R$ and $\R^{-1}$ are strong simulations. 
+The relation $\strg$ is defined as the largest strong bisimulation.
+ If $\con{P}{\rho} \strg
+ \con{Q}{\sigma}$, we say they are strongly bisimilar.
+\end{defi}
+
+\begin{defi}
+A relation $\R \subseteq \Con \times \Con$ is a weak  
+simulation if $\con{P}{\rho} \R \con{Q}{\sigma}$
+implies $\qv{P}=\qv{Q}$, $\tr{\qv{P}}{\rho}=\tr{\qv{Q}}{\sigma}$ and
+for all TPCP map $\E$ that acts on $\H_{\overline{\qv{P}}}$.
+\begin{itemize}
+\item whenever $\con{P}{\E(\rho)} \xrightarrow{\alpha} \mu$,
+      there exists $\nu$ such that
+      $\con{Q}{\E(\sigma)}\Rightarrow
+      \xrightarrow{\hat \alpha} \Rightarrow \nu$ and $\mu \R^\dagger
+      \nu$
+\end{itemize}
+$\R$ is a weak bisimulation if $\R$ and $\R^{-1}$ are weak simulations.
+The relation $\approx$ is defined as
+the largest weak bisimulation. If $\con{P}{\rho} \approx
+ \con{Q}{\sigma}$, we may simply say they are bisimilar instead of
+weakly bisimilar.
+\end{defi}
+
+For the bisimulation relations of qCCS configurations, ownership of
+quantum variables, which represent physical objects, is significant.
+The first condition $\qv{P}=\qv{Q}$ implies $\sfqv - \qv{P} = 
+\sfqv - \qv{Q}$, which means the equality of quantum variables
+that the outsider possesses. The second condition
+$\tr{\qv{P}}{\rho}=\tr{\qv{Q}}{\sigma}$ means the equality of quantum
+states that the outsider can access. In the next condition, 
+an arbitrary TPCP map $\E$ that acts on $\sfqv - \qv{P}$ is taken.
+This allows the outsider to perform an arbitrary operation to quantum
+systems that she can access.
+
+\begin{rem}
+ There is another way to define probabilistic bisimulation based on
+ equivalence classes \cite{Larsen1991, Goubault2007, Davidson-etal2012}.
+ When we define by this way, an equivalent notion is in fact defined.
+ Concretely, if $\con{P}{\rho} \R \con{Q}{\sigma}$ holds for some 
+ strong bisimulation relation $\R$, then 
+ \begin{align*}
+  & \qv{P} = \qv{Q}, \tr{\qv{P}}{\rho} = \tr{\qv{Q}}{\sigma}, \mbox{ and }\\
+  &\forall \E_{\tilde r}:\D(\H_{\sfqv - \qv{P}})\rightarrow \D(\H_{\sfqv
+  - \qv{P}}). ~ \forall S \in \Con/\R.\\
+  (&\exists \mu.\,(\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha} \mu \mbox{ and }
+  \sum_{S \R X_i} \mu(X_i)=p)\\
+  \Leftrightarrow&
+ \exists \nu.\,(\con{Q}{\E_{\tilde r}(\sigma)} \xrightarrow{\alpha} \nu \mbox{ and }
+ \sum_{S \R Y_i} \nu(Y_i)=p))
+ \end{align*}
+hold, and conversely.
+\end{rem}
+
+Although we consider a little different formal framework,
+$\approx$ has the following properties.
+Proposition \ref{symqccs:equivalence} and Theorem 
+\ref{symqccs:congruence} are proven similarly to the
+original \cite{DengFeng2012}.
+Theorem \ref{symqccs:coinduction} is proven similarly to
+the previous version \cite{FengDuanYing2011}.
+
+\begin{prop}
+\label{symqccs:equivalence}
+ $\approx$ is an equivalence relation.
+\end{prop}
+\begin{thm}
+\label{symqccs:coinduction}
+$\con{P}{\rho} \approx \con{Q}{\sigma}$
+if and only if
+$\qv{P}=\qv{Q}$,\\
+$\tr{\qv{P}}{\rho}=\tr{\qv{Q}}{\sigma}$ and
+for all TPCP map $\E$ that acts on $\H_{\overline{\qv{P}}}$,
+\begin{enumerate}
+ \item whenever $\con{P}{\E(\rho)} \xrightarrow{\alpha} \mu$,
+       there exists $\nu$ such that
+       $\con{Q}{\E(\sigma)}\Rightarrow
+       \xrightarrow{\hat \alpha} \Rightarrow \nu$ and
+       $\mu \approx^\dagger \nu$,
+ \item whenever $\con{Q}{\E(\sigma)} \xrightarrow{\alpha} \nu$,
+       there exists $\mu$ such that
+       $\con{P}{\E(\rho)}\Rightarrow
+       \xrightarrow{\hat \alpha} \Rightarrow \mu$ and $\mu
+       \approx^\dagger \nu$.
+\end{enumerate}
+\end{thm}
+
+Especially, the next theorem is useful to examine equivalence of
+protocols under the existence of other protocols.
+\begin{thm}
+\label{symqccs:congruence}
+If $\con{P}{\rho} \approx \con{Q}{\sigma}$,
+\begin{itemize}
+ \item $\con{P \backslash L}{\rho} \approx \con{Q \backslash L}{\sigma}$,
+       and
+ \item $\con{P||R}{\rho} \approx \con{Q||R}{\sigma}$
+\end{itemize}
+hold for all set of channels $L$ and process $R$ with
+$\qv{P} \cap \qv{Q} = \emptyset$.
+\end{thm}
+
+We also use the following properties of {\it strong} bisimulation to
+prove the soundness of our verifier. 
+The properties are proven
+similarly to those of weak bisimulation \cite{DengFeng2012}.
+\begin{prop}
+\label{symqccs:strgequiv} 
+$\strg$ is an equivalence relation.
+\end{prop}
+
+\begin{prop}
+\label{symqccs:strgopclose}
+ If $\con{P}{\rho} \strg \con{Q}{\sigma}$, then
+$\con{P}{\E(\rho)} \strg \con{Q}{\E(\sigma)}$ for all
+TPCP map acting on $\H_{\overline{\qv{P}}}$.
+\end{prop}
+\begin{thm}
+\label{symqccs:strgcong}
+ If $\con{P}{\rho} \strg \con{Q}{\sigma}$, then
+\begin{itemize}
+ \item $\con{P \backslash L}{\rho} \strg \con{Q \backslash L}{\sigma}$,
+       and
+ \item $\con{P||R}{\rho} \strg \con{Q||R}{\sigma}$
+\end{itemize}
+hold for all set of channels $L$ and process $R$ with
+$\qv{P} \cap \qv{Q} = \emptyset$.
+\end{thm}
+
+We call the properties of $\approx$ and $\strg$ {\it congruence}
+that are stated by Theorem \ref{symqccs:congruence} and Theorem
+\ref{symqccs:strgcong}, although the relations are {\it not} closed
+under application of {\it all} constructors.
+
+Finally, we introduce some example and counter-example of bisimulation.
+In the following examples, let $\EPR$ be
+$(\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+(\frac{\ket{00}+\ket{11}}{\sqrt{2}})^\dagger$.
+\begin{ex}
+ The following two configurations are bisimilar
+for an arbitrary process $P(q^A)$ 
+satisfying $q^A \in \qv{P(q^A)}$ and quantum state $\rho^E \in
+\D(\H_{\overline{\{q^A, q^B\}}})$.
+
+ \begin{enumerate}
+  \item $X \defequiv \con{
+	\sndq{c}{q^B}. {\tt measure}[q^A].P(q^A)
+	}{
+	\EPR_{q^A, q^B} \otimes \rho^E
+	}$
+  \item $Y \defequiv \con{
+        {\tt measure}[q^A]. \sndq{c}{q^B}.P(q^A)
+	}{
+	\EPR_{q^A, q^B} \otimes \rho^E
+	}$
+ \end{enumerate}
+\end{ex}
+ A proof of the bisimilarity using Theorem \ref{symqccs:coinduction} is
+ as follows.
+ For $X = \con{P}{\rho} \in \Con$, let $\E(X)$ be $\con{P}{\E(\rho)}$
+ for a TPCP map $\E$.
+ For $X$ and $Y$, the conditions of quantum variables and
+ partial traces are easily checked. Without loss of generality, 
+we can take $I \otimes \E_1$ as an arbitrary
+TPCP map acting on $\H_{\over{\{q_A, q_B\}}}$.
+Let $\rho'$ be $\E_1(\rho^E)$.
+For the transition
+ \[
+  (I \otimes \E_1)(X)
+ \xrightarrow{\sndq{c}{q^B}} 
+ \con{
+ {\tt measure}[q^A].P(q^A)
+ }{
+ \EPR_{q^A, q^B} \otimes \rho'
+ },
+ \]
+ we have
+ \[
+ (I \otimes \E_1)(Y)
+ \Rightarrow \xrightarrow{\sndq{c}{q^B}} 
+ \con{P(q^A)}{(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A, q^B} \otimes \rho'}.
+ \]
+ For the transition
+ \[
+ (I \otimes \E_1)(Y) \xrightarrow{\tau}
+ \con{\sndq{c}{q^B}.P(q^A)}
+{(\frac{1}{2}\ket{00}\bra{00}+\frac{1}{2}\ket{11}\bra{11})_{q^A, q^B}
+ \otimes \rho'},
+ \]
+ we have $(I \otimes \E_1) (X) \Rightarrow 
+(I \otimes \E_1) (X)$. To prove $X \approx Y$, it is sufficient to
+show 
+\begin{align*}
+ \con{{\tt measure}[q^A].P(q^A)}
+ {\EPR_{q^A, q^B} \otimes \rho'}
+ &\approx
+ \con{P(q^A)}{(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A, q^B} \otimes \rho'}~(\sharp)\\
+ \mbox{ and }
+ (I \otimes \E_1) (X)
+ &\approx
+ \con{\sndq{c}{q^B}.P(q^A)}{\EPR_{q^A, q^B} \otimes \rho'}~(\flat).
+\end{align*}
+ For $(\sharp)$, the condition of partial
+ trace holds
+ because
+ \[
+  \tr{q^A}{\EPR_{q^A,q^B}} = 
+ \tr{q^A}{(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A,q^B}}
+ \]
+ holds.
+ Let $\E_2$ be an arbitrary TPCP map acting on $\H_{\over{\{q^A\}}}$.
+ For the transition
+\begin{align*}
+ &\con{{\tt measure}[q^A].P(q^A)}
+ {\E_2(\EPR_{q^A, q^B} \otimes \rho')}\\
+ \xrightarrow{\tau}
+ &\con{P(q^A)}
+ {\E_2(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A, q^B} \otimes \rho')} \defequiv Z,
+\end{align*}
+ we have
+\begin{align*}
+ &\con{P(q^A)}
+ {\E_2(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A, q^B} \otimes \rho')}
+ \Rightarrow Z
+\end{align*}
+ and $Z \approx^\dagger Z$.
+ Next, for an arbitrary TPCP map $\E_3$ acting on $\H_{\over{\{q^A\}}}$
+ and transition,
+\[
+ \con{P(q^A)}
+ {\E_3(\frac{1}{2}\ket{00}\bra{00} +
+ \frac{1}{2}\ket{11}\bra{11})_{q^A, q^B} \otimes \rho^E)}
+ \xrightarrow{\alpha} \mu,\]
+ we have the transition
+ \[
+\con{{\tt measure}[q^A].P(q^A)}
+ {\E_3(\EPR_{q^A, q^B} \otimes \rho^E)} \Rightarrow
+ (\xrightarrow{\alpha})^\dagger
+ \mu
+\]
+ and $\mu \approx^\dagger \mu$ holds.
+ The case when $P(q^A)$ does not perform any transition is
+ easily checked.
+
+The condition $(\flat)$ can
+ be similarly checked.
+
+\begin{ex}
+ The following two configurations are not bisimilar in general.
+ \begin{enumerate}
+  \item $X \defequiv \con{
+	\sndq{c}{q^B}. \ket{1}\bra{1}[q^A;x].P(q^A)
+	}{
+	\EPR_{q^A, q^B} \otimes \rho^E
+	}$
+  \item $Y \defequiv \con{
+        \ket{1}\bra{1}[q^A;x]. \sndq{c}{q^B}.P(q^A)
+	}{
+	\EPR_{q^A, q^B} \otimes \rho^E
+	}$
+ \end{enumerate}
+ We prove one of the necessary conditions of bisimulation cannot be
+satisfied. Let $P(q^A)$ do not perform any transition.
+ For the transition 
+\[
+  X \xrightarrow{\sndq{c}{q}} \con{
+ \ket{1}\bra{1}[q^A;x].P(q^A)
+ }{
+ \EPR_{q^A, q^B} \otimes \rho^E
+ },
+\]
+ the only possible action by $Y$ that perform $\Rightarrow
+ \xrightarrow{\sndq{c}{q}} \Rightarrow$ is
+\begin{align*}
+ Y \Rightarrow \xrightarrow{\sndq{c}{q}} 
+ &\frac{1}{2} \bullet \con{P(q^A)\subst{0}{x}}{
+	\ket{00}\bra{00}_{q^A, q^B} \otimes \rho^E
+	} \\
+ &\boxplus
+ \frac{1}{2} \bullet \con{P(q^A)\subst{1}{x}}{
+	\ket{11}\bra{11}_{q^A, q^B} \otimes \rho^E
+	}
+ \defequiv \nu.
+\end{align*}
+ Therefore, it is necessary for bisimilarity to 
+\[
+ \con{
+ \ket{1}\bra{1}[q^A;x].P(q^A)
+ }{
+ \EPR_{q^A, q^B} \otimes \rho^E
+ }
+ \approx \nu.
+\]
+However, this does not hold because
+ $\tr{q^A}{\EPR_{q^A, q^B}} \neq \tr{q^A}{\ket{ii}\bra{ii}_{q^A, q^B}}$
+ for $i \in \{0,1\}$.
+\end{ex}
+
+\section{Simplification of qCCS's Syntax}
+\subsection{Motivation}
+\subsubsection{On Formalization of Measurement}
+qCCS's syntax has the constructors of TPCP map
+application $\mathit{op}[\tilde q].P$
+and quantum measurement $M[\tilde q, x].P$.
+Since a quantum measurement can also be formalized as a TPCP map,
+we have two ways to formalize a measurement.
+For example, quantum measurement of the quantum
+state $\ket{+}\bra{+}$
+is formalized in the following two ways,
+where the TPCP map $\E^{\mathtt{measure}}(\rho)$
+that corresponds to $\mathtt{measure}[q]$ is $\ket{0}\bra{0}\rho
+\ket{0}\bra{0}+\ket{1}\bra{1}\rho
+\ket{1}\bra{1}$, $\rho^E \in \H_{\sfqv -\{q\}}$ is an arbitrary quantum
+states, and $P(q)$ is an arbitrary process with $q \in \qv{P(q)}$.
+ \begin{align*}
+  &1.~~\con{\ket{1}\bra{1}[q;x].P(q)}{\ket{+}\bra{+}_q \otimes \rho^E}
+  \xrightarrow{\tau}
+  \frac{1}{2} \bullet \con{P(q)}
+  {\ket{0}\bra{0}_q \otimes \rho^E} \boxplus\\
+  &~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  \frac{1}{2} \bullet \con{P(q)}
+  {\ket{1}\bra{1}_q \otimes \rho^E}\\
+ &2.~~\con{\mathtt{measure}[q].P(q)}{\ket{+}\bra{+}_q \otimes \rho^E}
+  \xrightarrow{\tau}
+  \con{P(q)}
+  {1/2(\ket{0}\bra{0}+\ket{1}\bra{1})_q}
+\end{align*}
+Although the two processes apparently formalize the same deed,
+they are not bisimilar.
+
+Indeed, the way to formalize a quantum measurement is important in the
+formal verification of Shor and Preskill's security proof using qCCS.
+In the transformation step, the EDP-based protocol
+is converted to the next protocol based on the
+fact that nobody outside cannot distinguish the following 
+two processes:
+\begin{itemize}
+ \item[A.] Alice measures a half of an EPR pair
+       and then sends the other half to the outside.
+ \item[B.] Alice sends a half of an EPR pair to the outside
+       and then measures the other half.
+\end{itemize}
+First, when the measurement is formalized using the
+constructor $M[\tilde q, x].P$, the following two configurations are
+obtained formalizing the above two, where
+$\EPR =
+(\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+(\frac{\ket{00}+\ket{11}}{\sqrt{2}})^\dagger$,
+$\rho^E \in \H_{\sfqv - \{q^A,q^B\}}$
+is an arbitrary quantum states, and $Q(q^A)$ is
+the successive process. They are not bisimilar.
+\begin{itemize}
+ \item[A-1.] $\con{
+       \sndq{c}{q^B}. \ket{1}\bra{1}[q^A;x].Q(q^A)
+       }{\EPR_{q^A, q^B} \otimes \rho^E}$
+ \item[B-1.] $\con{
+        \ket{1}\bra{1}[q^A;x]. \sndq{c}{q^B}.Q(q^A)
+       }{\EPR_{q^A, q^B} \otimes \rho^E}$
+\end{itemize}
+Second, when the measurement is formalized as 
+a TPCP map, the following two configurations are obtained
+formalizing the example. They are bisimilar.
+\begin{itemize}
+ \item[A-2.] $\con{
+       \sndq{c}{q^B}. {\tt measure}[q^A].Q(q^A)
+       }{
+       \EPR_{q^A, q^B} \otimes \rho^E
+       }$,
+ \item[B-2.] $\con{
+        {\tt measure}[q^A]. \sndq{c}{q^B}.Q(q^A)
+       }{
+       \EPR_{q^A, q^B} \otimes \rho^E
+       }$, where
+\end{itemize}
+\[
+\E^{\tt measure}_{q^A}(\rho) = 
+\ket{0}\bra{0}_{q^A}\rho\ket{0}\bra{0}_{q^A} + \ket{1}\bra{1}_{q^A}
+\rho \ket{1}\bra{1}_{q^A}.
+\]
+
+\subsubsection*{Criteria to Select the Way to Formalize}
+\label{symqccs:criteria}
+By the definition of weak bisimulation relation,
+whether probabilistic branches
+evoked by $M[\tilde q;x]$ \emph{exist or not} is
+significant in transition trees of qCCS configurations.
+Therefore, the two different formalization of a
+quantum measurement are considered to be 
+different from the view of the outsider.
+In general, it is unnatural that the outsider recognize
+the existence of probabilistic branches {\it without viewing
+configuration's different behaviour} that depends on 
+the result of the branch.
+Hence, we think that if probabilistic branches are evoked, then
+the insider must perform a different labelled transition.
+We accordingly propose a criteria to select one way from the two to
+formalize a quantum measurement.
+\begin{itemize}
+ \item If transitions with different labels occur according to
+       the result of the measurement, the measurement should be formalized
+       using the constructor $M[\tilde q;x].P$;
+ \item otherwise, it should be formalized
+       as a TPCP map, namely, using the constructor $\op{op}{\tilde
+       q}.P$.
+\end{itemize}
+By our criteria, we should formalize the measurement of $\ket{+}\bra{+}$
+in the first example as
+\begin{align*}
+  &1.~~\con{\ket{1}\bra{1}[q;x].P(q)}{\ket{+}\bra{+}_q \otimes \rho^E}
+  \xrightarrow{\tau}
+  \frac{1}{2} \bullet \con{P(q)}
+  {\ket{0}\bra{0}_q \otimes \rho^E} \boxplus\\
+  &~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  \frac{1}{2} \bullet \con{P(q)}
+  {\ket{1}\bra{1}_q \otimes \rho^E}
+\end{align*}
+if $P(q)$ performs different labeled transitions according to the
+result. A typical case is when $P \equiv \myif{x =
+1}{\sndq{c}{q}.P'}$ holds for some $\mathsf{c}$ and $P'$.
+Otherwise, we should formalize it as
+\[
+ 2.~~\con{\mathtt{measure}[q].P(q)}{\ket{+}\bra{+}_q \otimes \rho^E}
+  \xrightarrow{\tau}
+  \con{P(q)}
+  {1/2(\ket{0}\bra{0}+\ket{1}\bra{1})_q}.
+\]
+Next, let us consider the processes A and B in the second example.
+In fact, it is natural that we assume the successive process $Q(q^A)$
+does not perform different labeled transitions according to the result of
+the measurement of $q^A$. By the definition of the QKD protocols we
+consider, which channels Alice and Bob use does not depend on
+the result of the measurement of $q^A$.
+Hence, we should formalize them as follows by our
+criteria.
+\begin{enumerate}
+ \item[A-2.] $\con{
+       \sndq{c}{q^B}. {\tt measure}[q^A].Q(q^A)
+       }{
+       \EPR_{q^A, q^B} \otimes \rho^E
+       }$
+ \item[B-2.] $\con{
+        {\tt measure}[q^A]. \sndq{c}{q^B}.Q(q^A)
+       }{
+       \EPR_{q^A, q^B} \otimes \rho^E
+       }$.
+\end{enumerate}
+
+We simplified the syntax so that
+it reflects these criteria.
+We eliminated the constructions $M[\tilde q;x].P$ and 
+$\myif{b}{P}$.
+Instead, we introduced a new syntax $\measure{q}{P}$, where the
+observable $\ket{1}\bra{1}$ on the space corresponding to the 
+\emph{qubit}\footnote{Note that the meta variable $b$ stands for a boolean
+condition in the original syntax but
+the meta variable $b$ stands for a quantum variable with length $1$ in
+our simplified syntax.}
+ $b$ (i.e. $|b|=1$ must be satisfied.) is measured, and if the
+result is 1, then it behaves like $P$, else it terminates.
+In the new syntax, the qubit $b$ represents the condition for the branch,
+which
+is supposed to be computed beforehand by some TPCP map. % The final
+% condition we impose is that $P$ must contain at least one $\sndq{c}{q}$
+% or
+% $\rcvq{c}{q} \in \mathcal{P}$ with non-restricted channel $\mathsf{c}$
+% to make a visible labeled transition occur.
+Besides, we eliminated classical communications for simplicity.
+Since classical data can be represented by quantum data,
+the elimination of the use of classical data
+does not weaken crucially the expressiveness of the language.
+Indeed, a distribution where we have the value $0$ with probability $p$
+and $1$ with probability $1-p$ is represented by the diagonal 
+density operator $p\ket{0}\bra{0} + (1-p)\ket{1}\bra{1}$.
+
+\subsubsection{On Ownership of Quantum System}
+By the definition of bisimulation relation, 
+if $\con{P}{\rho} \approx \con{Q}{\sigma}$, then
+$\tr{\qv{P}}{\rho}=\tr{\qv{Q}}{\sigma}$. 
+Intuitively, $\qv{P}$ is considered as the set of quantum variables of
+the process
+$P$'s own, and $\sfqv - \qv{P}$ is the outsider's. 
+$\tr{\qv{P}}{\rho} \in \D(\H_{\sfqv - \qv{P}})$ is considered as the 
+quantum states that the outsider can access. For the bisimulation
+relation, ownership of quantum variables is significant. In
+the transitions of qCCS processes, the ownership changes by
+the communication between the process and the outsider by $\sndq{c}{q}$
+and
+$\rcvq{c}{q}$. However, there are cases where ownership changes
+without communication between a process and it's outsider.
+\[
+ \con{\mathtt{hadamard}[q].\nil}{\ket{0}\bra{0}_{q}
+ \otimes \rho^E} \xrightarrow{\tau}
+ \con{\nil}{\ket{0}\bra{0}_{q}
+ \otimes \rho^E} 
+\]
+In the above configurations, $\qv{\mathtt{hadamard}[q].\nil} = \{q\}$ and
+$\qv{\nil} = \emptyset$. The process loses in the 
+transition the ownership of the variable
+$q$ without sending it to the outside. We added the restriction
+that $\op{op}{\tilde q}.P$ is defined only if $\tilde q \subseteq
+\qv{P}$, and changed $\nil$ to a new constructor $\discard{\tilde q}$
+that terminates keeping the quantum variables $\tilde q$ inside.
+In the original qCCS, process's termination keeping 
+quantum variables $\tilde q$ inside is realized for example by
+$\myif{\mathtt{false}}{\op{\mathit{I}}{\tilde
+q}.\nil}$, where $\mathit{I}$ is the identity operator.
+
+\subsection{Simplified Syntax}
+\label{symqccs:modifiedsyntax}
+\begin{defi}
+The simplified qCCS syntax is given as follows.
+\begin{align*}
+\mathcal{P} \ni P,Q ::=\, &\discard{\tilde q} ~|~ \sndq{c}{q}.P ~|~
+ \rcvq{c}{q}.P
+ ~|~\op{\mathit{op}}{\tilde q}.P\\
+&~|~ P||Q ~|~ \measure{b}{P} ~|~ P
+ \backslash L
+\end{align*}
+$\qv{\cdot}$ for the simplified syntax is defined as
+$\qv{\discard{\tilde q}} = \tilde q$ and \\
+$\qv{\measure{b}{P}} = \qv{P}$.
+For a process to be legal, the following conditions are required.
+ \begin{enumerate}
+ \item $\sndq{c}{q}.P \in \mathcal{P}$ iff $q \notin \qv{P}$.
+ \item $\rcvq{c}{q}.P \in \mathcal{P}$ iff $q \in \qv{P}$.
+ \item $P||Q \in \mathcal{P}$ iff $\qv{P} \cap \qv{Q} = \emptyset$.
+ \item $\op{\mathit{op}}{\tilde q}.P \in \mathcal{P}$ iff $\tilde q \subseteq \qv{P}$.
+ \item $\measure{b}{P} \in \mathcal{P}$ iff $b \in \qv{P}$.%  and $P$ contains at least one $\sndq{c}{q}$ or
+       % $\rcvq{c}{q} \in \mathcal{P}$ with non-restricted channel $\mathsf{c}$.
+ \end{enumerate}
+\end{defi}
+
+\section{Simplification of Operational Semantics}
+We simplified the operational semantics for convenience of implementation.
+Instead of considering a probability distribution on configurations,
+we consider a probability-weighted quantum states represented by probability-weighted
+density operators. For example, instead of considering
+\begin{align*}
+ \con{\measure{b}{P}}{\rho} \, \xrightarrow{\tau} \,
+ & p \bullet \con{P}{\frac{\ket{1}\bra{1}_b\rho\ket{1}\bra{1}_b}{p}} \boxplus \\
+ & (1-p) \bullet
+ \con{\discard{\qv{P}}}{\frac{\ket{0}\bra{0}_b\rho\ket{0}\bra{0}_b}{1-p}}, \\
+\mbox{where } p = \tr{}{\ket{1}\bra{1}_b\rho},
+\end{align*}
+we consider
+\begin{align*}
+ \con{\measure{b}{P}}{\rho} \, \xrightarrow{\tau} \,
+ & \con{P}{\ket{1}\bra{1}_b\rho\ket{1}\bra{1}_b}\\
+ \con{\measure{b}{P}}{\rho} \, \xrightarrow{\tau} \,
+ & \con{\discard{\qv{P}}}{\ket{0}\bra{0}_b\rho\ket{0}\bra{0}_b}.
+\end{align*}
+For this purpose, we define the set of probability-weighted quantum 
+states
+$\Delta(\H)$, ranged over by $\rho, \sigma,...$, as
+$\{p\rho\,|\, p \in [0,1], \rho \in \D(\H)\}$. Any element $\rho \in
+\Delta(\H)$ can be converted to an ordinary density operator
+ $\frac{\rho}{\tr{}{\rho}} \in \D(\H)$.
+If there is no fear of confusion, we may simply say quantum states
+instead of
+probability-weighted quantum states. We again call a pair of a process and
+a probability-weighted quantum state a configuration.
+The set of configurations $\C$ is defined as $\mathcal{P} \times
+\Delta(\H)$. For a configuration $\con{P}{\rho} \in \C$, $\tr{}{\rho}$
+can be interpreted as the probability of reaching it from another
+configuration. By this simplification, 
+probability was excluded from the transition system. The simplified
+transition system is only nondeterministic, not probabilistic.
+
+\begin{defi}
+\label{symqccs:simpletrans}
+Let $\A_{\tau} := \{\tau\} \cup
+ \{\sndq{c}{q},\rcvq{c}{q} \,|\, \mathsf{c} \in \mathit{qChan}, q \in 
+\sfqv \}$ be the set of actions.
+The transition $\rightarrow \subseteq \C \times \A_{\tau} \times \C$ is 
+defined by the rules in Figure \ref{fig:simplified-semantics}.
+The transition $\xrightarrow{\hat \alpha}$ is defined as follows.
+\[
+ \xrightarrow{\hat \alpha} := \begin{cases}
+			       \xrightarrow{\tau} \cup \{(\con{P}{\rho},
+			       \con{P}{\rho})\}~~~&(\alpha
+			       \mbox{ is } \tau)\\
+			       \xrightarrow{\alpha}~~~&(\mbox{otherwise})
+			      \end{cases} 
+\]
+\begin{figure}[htbp]
+\begin{minipage}{0.5\hsize}
+\begin{align*}
+%send
+&\frac{}
+{\con{\sndq{c}{q}.P}{\rho} \xrightarrow{\sndq{c}{q}}
+\con{P}{\rho}}
+\,\mbox{(In)}\\
+\\
+%receive
+&\frac{r \in \sfqv - \qv{P}}
+{\con{\rcvq{c}{q}.P}{\rho} \xrightarrow{\rcvq{c}{r}}
+\con{P\subst{r}{q}}{\rho}}
+\,\mbox{(Out)}\\
+\\
+%operator
+&\frac{}
+{\con{\op{op}{\tilde q}.P}{\rho} \xrightarrow{\tau} 
+\con{P}{\E^\mathit{op}_{\tilde q}(\rho)}}
+\,\mbox{(Op)}
+\end{align*}
+\end{minipage}
+\begin{minipage}{0.5\hsize}
+ \begin{align*}
+%restriction
+&\frac{
+\con{P}{\rho} \xrightarrow{\alpha} 
+\con{P'}{\rho'}~~~
+\mathrm{cn}(\alpha) \cap L = \emptyset
+}
+{
+\con{P \backslash L}{\rho} \xrightarrow{\alpha} 
+\con{P' \backslash L}{\rho'}
+}\,\mbox{(Res)}\\
+\\
+%interleavingR
+&\frac{
+\con{Q}{\rho} \xrightarrow{\alpha} 
+\con{Q'}{\rho'}~~~
+}
+{
+\con{P||Q}{\rho} \xrightarrow{\alpha} 
+\con{P||Q'}{\rho'}~~~
+}\,\mbox{(Right)}\\
+\\
+%interleavingL
+&\frac{
+\con{P}{\rho} \xrightarrow{\alpha} 
+\con{P'}{\rho'}
+}
+{
+\con{P||Q}{\rho} \xrightarrow{\alpha} 
+\con{P'||Q}{\rho'}~~~
+}\,\mbox{(Left)}
+ \end{align*}
+\end{minipage}
+
+\begin{align*}
+  %communication
+ &\frac{
+ \con{P}{\rho} \xrightarrow{\sndq{c}{q}} 
+ \con{P'}{\rho}~~~
+ \con{Q}{\rho} \xrightarrow{\rcvq{c}{q}} 
+ \con{Q'}{\rho}
+ }
+ {
+ \con{P||Q}{\rho} \xrightarrow{\tau} 
+ \con{P'||Q'}{\rho}
+ }\,\mbox{(Comm)}\\
+\\
+%measure
+&~\frac{ \ket{1}\bra{1}^{b} \rho \ket{1}\bra{1}^{b} \neq O
+}
+{
+\con{\measure{b}{P}}{\rho} \xrightarrow{\tau}
+\con{P}{\ket{1}\bra{1}^{b} \rho \ket{1}\bra{1}^{b}}
+}\,\mbox{(Meas1)}\\
+\\
+&\frac{ \ket{0}\bra{0}^{b} \rho \ket{0}\bra{0}^{b} \neq O
+}
+{
+\con{\measure{b}{P}}{\rho} \xrightarrow{\tau}
+\con{\discard{\qv{P}}}{\ket{0}\bra{0}^{b} \rho \ket{0}\bra{0}^{b}}
+}\,\mbox{(Meas0)}
+ \end{align*}
+\caption{Simplified Semantics}
+\label{fig:simplified-semantics}
+\end{figure}
+\end{defi}
+We call a new formal framework {\it nondeterministic qCCS}
+whose set of configuration is $\C$ and transition rules are defined in
+Definition \ref{symqccs:simpletrans}. Although our verifier, 
+called \emph{Verifier1}, is
+implemented based on nondeterministic qCCS, it verifies the
+relation $\approx$ defined by Deng et al \cite{DengFeng2012}.
+We call the property of Verifier1 \emph{soundness}, which is
+further discussed in Section \ref{symqccs:sndness}.
+
+\section{Automated Verification of Bisimilarity}
+Verifier1 handles the configurations $\con{P}{\rho}$ that consist
+of a process $P \in \mathcal{P}$ and a symbolic representation
+$\rho \in \mathcal{S}$ of a probability-weighted quantum state $\braw{\rho} \in
+\Delta(\H)$. Verifier1 obeys the simplified transition rules
+defined in Definition \ref{symqccs:simpletrans} except for (Meas$i$)
+for $i = 0,1$: it performs the transition even if 
+$ \braw{\opsym{\mathtt{proj}i}{b}{\rho}} = 
+\ket{i}\bra{i}_b \braw{\rho}\ket{i}\bra{i}_b
+= O$ for $\rho \in \mathcal{S}$.
+
+\subsection{Symbolic Representation of Quantum States}
+Since cryptographic protocols are defined with security parameters,
+the dimensions of quantum states, which are data in protocols,
+are unfixed. In our verifier, quantum states are represented as
+symbols. First, finite sets
+$S_{\mathit{nat}},
+S_{\mathit{stat}},
+S_{\mathit{op}}$ of symbols respectively
+representing
+natural numbers, quantum states, and TPCP maps are assumed. 
+\begin{itemize}
+ \item $S_{\mathit{nat}}$ is a set of symbols representing
+       natural numbers. A symbol $\mathtt{1}$ is
+       an element of $S_{\mathit{nat}}$.
+ \item $S_{\mathit{stat}}$ is a set of symbols representing quantum
+       states.
+ \item $S_{\mathit{op}}$ is a set of symbols representing TPCP maps.
+ \item A function $\mathrm{len}:\sfqv \rightarrow
+       S_{\mathit{nat}}$ carries each quantum variable to its 
+       qubit-length. $b \in \sfqv$ is called
+       a qubit variable if $\mathrm{len}(b) = \mathtt{1}$.
+ \item A function $\mathrm{arg}:S_{\mathit{stat}} \cup
+       S_{\mathit{op}} \rightarrow \bigcup_{n \in
+       \mathbb{N_{+}}}(S_{\mathit{nat}})^n$ carries
+       each symbol of quantum states or TPCP map to
+       qubit-lengths of its arguments. For example,
+       an EPR pair $(\frac{\ket{00}+\ket{11}}{\sqrt{2}})
+       (\frac{\ket{00}+\ket{11}}{\sqrt{2}})_{q,r}^\dagger$
+       is represented as
+       $\texttt{EPR[}q,r\texttt{]}$, where $\mathtt{EPR} \in
+       S_{\mathit{stat}}$,
+       $\mathrm{len}(q)=\mathrm{len}(r)=\mathtt{1}$, and
+       $\mathrm{arg}(\mathtt{EPR})=(\mathtt{1},\mathtt{1})$.
+\end{itemize}
+
+After the sets $S_{\mathit{nat}}$,
+$S_{\mathit{stat}}$, $S_{\mathit{op}}$, $\mathrm{len}(\cdot)$, and
+$\mathrm{arg}(\cdot)$ are defined,
+the syntax of symbolic representations of quantum states are
+defined.
+
+\begin{defi}
+\label{symqccs:symbrep}
+The syntax of symbolic representations of quantum states 
+are given as  follows,
+\begin{align*}
+\mathcal{S} \ni \rho, \sigma ::=\,\, &X\mathtt{[}\tilde q\mathtt{]} ~|~
+\mathit{op}\mathtt{[}\tilde q\mathtt{](}\rho\mathtt{)} ~|~ \rho \,
+  \mathtt{*} \, \sigma
+  ~|~\mathtt{proj0}\mathtt{[}b\mathtt{](}\rho\mathtt{)}
+~|~\mathtt{proj1}\mathtt{[}b\mathtt{](}\rho\mathtt{)}
+~|~\mathtt{Tr}\mathtt{[}\tilde q\mathtt{](}\rho\mathtt{)}
+\end{align*}
+where $b$ is a qubit variable, $X \in S_{\mathit{stat}}$, and 
+$\mathit{op} \in S_{\mathit{op}}$. The set of quantum variables 
+$\qv{\rho}$ in symbolic representations $\rho$ are defined as follows.
+\begin{align*}
+&\qv{X\mathtt{[}\tilde q\mathtt{]}} = \tilde q,
+&&\qv{\mathit{op}\mathtt{[}\tilde
+ q\mathtt{](}\rho\mathtt{)}}=\qv{\rho},\\
+&\qv{\rho \,\mathtt{*}\, \sigma} = 
+ \qv{\rho} \cup \qv{\sigma},
+&&\qv{\mathtt{proj}i\mathtt{[}b\mathtt{](}\rho\mathtt{)}}
+= \qv{\rho},\\
+&\qv{\mathtt{Tr}\mathtt{[}\tilde
+ q\mathtt{](}\rho\mathtt{)}}=\qv{\rho} - \tilde q.
+\end{align*}
+For a symbolic representation to be legal, the following conditions are
+required.
+\begin{enumerate}
+ \item $X\mathtt{[}q_1,q_2,...,q_n\mathtt{]} \in \mathcal{S}$ iff 
+       $\mathrm{arg}(X)=(\mathrm{len}(q_1),\mathrm{len}(q_2),...,\mathrm{len}(q_
+       n))$.
+ \item $\mathit{op}\mathtt{[}q_1,q_2,...,q_n\mathtt{](}\rho\mathtt{)}
+       \in \mathcal{S}$ iff
+       $\mathrm{arg}(op)=(\mathrm{len}(q_1),\mathrm{len}(q_2),...,
+       \mathrm{len}(q_n))$ and \\
+       $\{q_1,q_2,...,q_n\} \subseteq \qv{\rho}$.
+ \item $\rho \, \mathtt{*} \, \sigma \in \mathcal{S}$ iff $\qv{\rho} \cap
+       \qv{\sigma} = \emptyset$.
+ \item For $i \in \{\mathtt{0}, \mathtt{1}\}$,
+       $\mathtt{proj}i\mathtt{[}b\mathtt{](}\rho\mathtt{)} \in \mathcal{S}$ 
+       iff $b \in \qv{\rho}$.
+ \item $\mathtt{Tr}\mathtt{[}\tilde q \mathtt{](}\rho\mathtt{)} \in
+       \mathcal{S}$ iff $\tilde q \subseteq \qv{\rho}$.
+\end{enumerate}
+If $\rho, \sigma \in \mathcal{S}$ are syntactically equal, we write
+ $\rho \equiv \sigma$.
+\end{defi}
+Intuitive meanings are as follows.
+$X\texttt{[}\tilde q\texttt{]}$ means that $\tilde q$'s quantum state
+is $X$.
+$\mathit{op}\texttt{[}\tilde q\texttt{](}\rho\texttt{)}$
+is a quantum state obtained after application of a TPCP map
+$\mathit{op}$ that
+acts on $\tilde q$, 
+to $\rho$.  $\rho \,  \mathtt{*} \, \sigma$ is the tensor product of
+states $\rho$ and $\sigma$. $\mathtt{proj}i\texttt{[}b\texttt{](}\rho\texttt{)}$
+means the quantum state $\rho$ obtained after application of the projector
+$\ket{i}\bra{i}_b$. $\mathtt{Tr}\texttt{[}\tilde
+q\texttt{](}\rho\texttt{)}$ means the partial trace of $\rho$ by
+$\tilde q$.
+
+Next, we define the formal interpretation of the symbolic
+representations.
+To define it, interpretations of the elements of 
+$S_{\mathit{nat}}$, $S_{\mathit{stat}}$, and $S_{\mathit{op}}$ must be
+defined beforehand. The interpretations depend on a set of
+security parameters. Let $\Lambda$ be the product of
+the ranges of security parameters.
+The types of the interpretations $\braw{\cdot}$, which 
+depend on $\Lambda$, are as
+follows. \footnote{For $f : \Lambda \rightarrow \mathbb{N}_+$, 
+$2^{f} : \Lambda \rightarrow \mathbb{N}_+$ represents
+$2^{f}(\lambda) = 2^{f(\lambda)}$ for all $\lambda \in \Lambda$.}
+\begin{itemize}
+ \item For $n \in S_{\mathit{nat}}$, $\braw{n} :
+       \Lambda \rightarrow \mathbb{N}_+$. For $q \in \sfqv$ with 
+       $\mathrm{len}(q) = n$, $\H_q$ is $2^{\braw{n}}$-dimensional.
+ \item For $X \in S_{\mathit{stat}}$ with
+       $\mathrm{arg}(X) = (n_1,n_2,...,n_m)$, $\braw{X}$
+       is an element of a Hilbert space with dimension
+       $2^{\braw{n_1}+
+       \braw{n_2} + \cdots\braw{n_m}}$.
+ \item For $\mathit{op} \in S_{\mathit{op}}$ with
+       $\mathrm{arg}(\mathit{op}) = (n_1,n_2,...,n_m)$,
+       $\braw{\mathit{op}}$
+       is a TPCP map on Hilbert space with dimension
+       $2^{\braw{n_1} +
+       \braw{n_2} + \cdots\braw{n_m}}$.
+\end{itemize}
+The interpretation of the symbolic representations is then 
+defined as follows.
+\begin{itemize}
+ \item $\braw{X\texttt{[}\tilde q\texttt{]}} =
+       \braw{X} \in \Delta(\H_{\tilde q})$
+ \item $\braw{\mathit{op}\texttt{[}\tilde
+       q\texttt{](}\rho\texttt{)}} =
+       \braw{\mathit{op}}_{\tilde q}(\braw{\rho})
+       \in \Delta(\H_{\qv{\rho}})$
+ \item $\braw{\rho \,\mathtt{*} \, \sigma} = 
+       \braw{\rho} \otimes
+       \braw{\sigma} \in \Delta(\H_{\qv{\rho}} \otimes
+       \H_{\qv{\sigma}})$
+ \item $\braw{\mathtt{proj0}\texttt{[}b\texttt{](}\rho\texttt{)}}
+       =
+       \ket{0}\bra{0}_b \braw{\rho} \ket{0}\bra{0}_b \in
+       \Delta(\H_{\qv{\rho}})$
+ \item $\braw{\mathtt{proj}1\texttt{[}b\texttt{](}\rho\texttt{)}} 
+       =
+       \ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b \in
+       \Delta(\H_{\qv{\rho}})$
+ \item $\braw{\mathtt{Tr}\texttt{[}\tilde q\texttt{](}\rho\texttt{)}}
+       =
+       \tr{\tilde q}{\braw{\rho}} \in
+       \Delta(\H_{\qv{\rho} - \tilde q})$
+\end{itemize}
+\begin{ex}
+ Let $\Lambda = \mathbb{N}_+$, $\sfqv = \{\mathtt{q}, \mathtt{r}\}$,
+ $\mathrm{len}(\mathtt{q})=
+ \mathrm{len}(\mathtt{r})=\mathtt{n}$ and let
+ $\braw{\mathtt{n}}(k) = k$, $\braw{\mathtt{EPR}} =
+ ((\frac{\ket{00}
+ + \ket{11}}{\sqrt{2}})
+ (\frac{\ket{00}
+ + \ket{11}}{\sqrt{2}})^\dagger)^{\otimes k} \defequiv \mathit{EPR}$,
+ $\mathrm{arg}(\mathtt{EPR})=(\mathtt{n},\mathtt{n})$, \\
+ $\braw{\mathtt{measure}} (\rho) = \ket{0}\bra{0}^{\otimes k}
+ \rho \ket{0}\bra{0}^{\otimes k} + \ket{1}\bra{1}^{\otimes k} \rho
+ \ket{1}\bra{1}^{\otimes k}$, and
+ $\mathrm{arg}(\mathtt{measure})=(\mathtt{n})$.
+ The interpretation of the symbolic representation
+ $\mathtt{measure[q](EPR[q,r])}$ is calculated as follows.
+ \begin{align*}
+  \braw{\mathtt{measure[q](EPR[q,r])}}
+  &= \braw{\mathtt{measure}}_{\mathtt{q}} (\mathit{EPR}_{\mathtt{q},
+  \mathtt{r}})\\
+  &= \braw{\mathtt{measure}} \otimes I_{\H_\mathtt{r}}
+   (\mathit{EPR}_{\mathtt{q}, \mathtt{r}})\\
+  &= \sum_{j \in \{0,1\}^k} \frac{1}{2^k}\ket{jj}\bra{jj}_{\mathtt{q},
+  \mathtt{r}}
+ \end{align*}
+\end{ex}
+
+\subsection{Equality Test of Partial Traces}
+\subsubsection{Calculation of Partial Traces}
+\label{symqccs:traceoutalgo}
+To verify bisimilarity, the equality of partial traces
+must be checked.
+In fact, partial traces can be to some extent calculated
+quite simply focusing on the structure of the expression of the quantum
+states. 
+For example,
+suppose there are 2 qubits named $q$ and $r$, and the 
+the outsider has only $r$. When the quantum state of the total system
+is $\E_q(\ket{0}\bra{0}_q\otimes\ket{1}\bra{1}_r)$,
+the quantum state that the outsider can access is
+$\tr{q}{\E_q(\ket{0}\bra{0}_q\otimes\ket{1}\bra{1}_r)}$.
+We have $\tr{q}{\E_q(\ket{0}\bra{0}_q\otimes\ket{1}\bra{1}_r)} =
+\ket{1}\bra{1}_r$ for an arbitrary operator $\E_q$ that acts on $q$,
+simply eliminating the state $\ket{0}\bra{0}_q$ and
+the operator $\E_q$.
+This is intuitively interpreted that 
+the outsider cannot observe what happens to quantum system that
+he or she cannot access.
+For the symbolic representations, they can be simplified
+focusing on occurrence of quantum variables.
+Formulating such calculation, we obtain the following rewriting
+rules, where interpretation of the right-hand side of $=$ is equal to
+that of the left-hand side regardless of $S_{\mathit{nat}},
+S_{\mathit{stat}}, S_{\mathit{op}}$, their interpretations, 
+and definitions of $\mathrm{len}(\cdot)$ and $\mathrm{arg}(\cdot)$.
+\begin{align}
+& \ptr{\tilde q}{\rho}=\ptr{\tilde r}{\ptr{\tilde s}{\rho}}
+ \mbox{ if } \tilde q = \tilde r \cup \tilde s\\
+& \ptr{\tilde q}{\opsym{op}{\tilde
+ r}{\rho}} = \ptr{\tilde q}{\rho} \mbox{ if }
+ \tilde r \subseteq \tilde q \\
+&\ptr{\tilde q}{\opsym{op}{\tilde r}{\rho}}=
+ \opsym{op}{\tilde r}{\ptr{\tilde q}{\rho}}~\mathrm{if}~\tilde q \cap
+ \tilde r = \emptyset\\
+& \ptr{\tilde q}{\opsym{\mathtt{proj}i}{b}{\rho}}=
+\opsym{\mathtt{proj}i}{b}{\ptr{\tilde q}{\rho}}
+ \mbox{ if } b \notin \tilde q\\
+& \ptr{\tilde q}{\opsym{\mathtt{proj}i}{b}{\rho}}=
+\ptr{b}{\opsym{\mathtt{proj}i}{b}{\ptr{\tilde q -
+ \{b\}}{\rho}}} \mbox{ if } b \in \tilde q\\
+&\ptr{\tilde q}{\rho * \rho_{\tilde q} * \sigma} = \rho *
+ \sigma, \mbox{ where } \qv{\rho_{\tilde q}} = \tilde q
+\end{align}
+
+\subsubsection{Algorithm to Trace Out}
+Verifier1 uses the rewriting rules above.
+The procedure goes as follows. Let
+$\ptr{\tilde q}{\E_1\texttt{[}\tilde q_1\texttt{]}
+\texttt{(}...\texttt{(}\E_n\texttt{[}\tilde 
+q_n\texttt{](}\rho_1 \texttt{*} ... \texttt{*} \rho_m \texttt{))}...
+\texttt{)}}$
+be the objective quantum state, where $\E_i$ is either TPCP map symbol or
+$\mathtt{proj}j \, (j \in \{\mathtt{0}, \mathtt{1}\})$ for $0 \le i \le n$.
+\begin{enumerate}
+ \item A set $S_0$ is initialized to be $\tilde q$.
+ \item For each $i\,(1 \leq i \leq n)$, $\E_i$'s are
+       successively processed.
+       \begin{itemize}
+	\item If $\E_i$ is a TPCP
+	      map symbol and $\tilde q_i \subseteq S_{i - 1}$ holds,
+	      then 
+	      $\E_i\texttt{[}\tilde q_i\texttt{]}$ is
+	      eliminated by rule (3.2), and $S_i$ is defined to be
+	      $S_{i - 1}$.
+	\item If $\E_i$ is a TPCP map symbol and $\tilde q_i \subseteq
+	      S_{i - 1}$ does not hold, then 
+	      $S_i$ is defined to be $S_{i - 1}\backslash \tilde
+	      q_i$, which is application of rules (3.1) and (3.3).
+	\item If $\E_i\texttt{[}\tilde q\texttt{]}$ is
+	      $\mathtt{proj}i\texttt{[}b\texttt{]}$
+	      and $b \in S_{i - 1}$ holds, then 
+	      $S_i$ is defined to be $S_{i - 1}$,
+	      which is application of rules (3.4).
+	\item If $\E_i\texttt{[}\tilde q\texttt{]}$ is
+	      $\mathtt{proj}i\texttt{[}b\texttt{]}$
+	      and $b \notin S_{i - 1}$ holds, then 
+	      $S_i$ is defined to be $S_{i - 1}\backslash \{b\}$,
+	      which is application of rules (3.5).
+       \end{itemize}
+ \item A set $T$, recording which quantum variables related to
+       the state has been deleted by rule (3.6), is initialized
+       to $\emptyset$.
+       For each $j\,(1 \leq j \leq m)$, if $\qv{\rho_j} \subseteq S_n$,
+       then $\rho_j$ is eliminated and $T$ is updated to 
+       $T \cup \qv{\rho_j}$.
+ \item $\texttt{Tr[}\tilde q \texttt{]}$ is rewritten to
+       $\texttt{Tr[}\tilde q - T \texttt{]}$.
+\end{enumerate}
+\begin{ex}
+ A symbolic representation 
+\[
+\mathtt{Tr[q,r,b](neg[b](proj0[b](hadamard[r](cnot[q,b](EPR[q,s]*R[r]*R[b])))))}
+\]
+is simplified by the trace out procedure as follows.
+\begin{align*}
+&\mathtt{Tr[q,r,b](neg[b](proj0[b](hadamard[r](cnot[q,b](EPR[q,s]*R[r]*R[b])))))}\\
+=&\mathtt{Tr[b](proj0[b](Tr[q,r](hadamard[r](cnot[q,b](EPR[q,s]*R[r]*R[b])))))}\\
+=&\mathtt{Tr[b](proj0[b](Tr[q,r](cnot[q,b](EPR[q,s]*R[r]*R[b]))))}\\
+=&\mathtt{Tr[b](proj0[b](Tr[q](cnot[q,b](Tr[r](EPR[q,s]*R[r]*R[b])))))}\\
+=&\mathtt{Tr[b](proj0[b](Tr[q](cnot[q,b](EPR[q,s]*R[b]))))}\\
+=&\mathtt{Tr[b,q](proj0[b](cnot[q,b](EPR[q,s]*R[b])))}
+\end{align*}
+\end{ex}
+
+\subsubsection{User-defined Equations}
+Verifier1 also takes user-defined equations to verify equality
+of quantum states that are symbolically represented. The equations
+are of the form $\rho = \sigma$, where $\rho, \sigma \in \mathcal{S}$.
+An equation $\rho = \sigma$ is said to be valid if $\braw{\rho} =
+\braw{\sigma}$.
+
+There is a restriction on user-defined equations $\rho = \sigma$:
+$\rho$ and $\sigma$ must contain the same number of
+$\mathtt{proj}i[b]$ for $i = \mathtt{0}, \mathtt{1}$ and for all
+$b \in \sfqv$. This makes the proof
+of the soundness (Theorem \ref{symqccs:correspondence}) easier.
+
+\subsubsection{Application of User-defined Equations}
+If an objective quantum state has a part that
+matches to the left-hand side of a user-defined equation,
+the part is rewritten to the right-hand side.
+To apply a user-defined equation, Verifier1 automatically
+solves commutativity of TPCP maps or partial traces
+for disjoint sets of quantum variables.
+For example, if the objective quantum
+state is $\texttt{Tr[q](hadamard[s]}\texttt{(EPR[q,r]*X[s]))}$ and a user
+defines an equation $\texttt{Tr[q](EPR[q,r])=Tr[q](PROB[q,r])}~\mathrm{(E1)}$, 
+the application procedure goes as follows.
+\begin{align*}
+&\texttt{Tr[q](hadamard[s](EPR[q,r]*X[s]))}\\
+=~&\texttt{hadamards[s](Tr[q](EPR[q,r]*X[s]))} &&\mbox{(by (3.2))}\\
+=~&\texttt{hadamard[s](Tr[q](PROB[q,r]*X[s]))} &&\mbox{(by E1)}
+\end{align*}
+Since trace-out may have become applicable by application of
+user-defined rules, trace-out procedure is applied again.
+In each opportunity to test the equality of quantum states, 
+each user-defined equation is applied only once.
+This guarantees whatever rules a user defines, the equality test
+terminates.
+
+\subsubsection{Equality Test after the Rewriting}
+After the rewriting by
+user-defined equations and trace out,
+equality of the two symbolic representations are
+checked up to exchange of the order of TPCP map application and
+tensor product. For example, symbolic expressions
+\begin{align*}
+&\texttt{Tr[q](hadamard[s](bitflip[r](EPR[q,r]*X[s])))} \mbox{ and}\\
+&\texttt{Tr[q](bitflip[r](hadamard[s](X[s]*EPR[q,r])))}
+\end{align*}
+must be judged to be equal.
+Verifier1 automatically judges the equality by
+syntactically checking disjointness of TPCP maps'
+arguments and by sorting environment symbols by name, which are
+concatenated by ``$\texttt{*}$''.
+
+\subsection{Algorithm to Check Bisimilarity}
+\label{symqccs:algorithmforbisim}
+The recursive procedure to verify bisimilarity is as follows.
+It returns either $\mathit{true}$ or $\mathit{false}$.
+\begin{enumerate}
+\item The procedure takes as input two configurations $\con{P_0}{\rho_0}$,
+      $\con{Q_0}{\sigma_0}$ and user-defined equations $\mathit{eqs}$
+      on quantum states.
+\item If $P_0$ and $Q_0$ can perform any $\tau$-transitions of
+      TPCP map applications, they are all performed at this point.
+      Let $\con{P}{\rho}$ and $\con{Q}{\sigma}$ be the configurations
+      thus obtained.
+\item Whether $\qv{P} = \qv{Q}$ is checked. If it does not hold, the
+      procedure returns $\mathit{false}$.
+\item Whether $\ptrtt{\qv{P}}{\rho} = \ptrtt{\qv{Q}}{\sigma}$ is 
+      checked
+      using $\mathit{eqs}$.
+      The procedure to check equality of quantum states are described
+      in the previous subsection.
+      If it does not hold, the procedure returns $\mathit{false}$.
+\item A new TPCP map symbol $\E\texttt{[}\qv{\rho} - \qv{P}\texttt{]}$
+      that stands for an
+      arbitrary operation is generated.
+\item \begin{enumerate}
+       \item For each $\con{P'}{\rho'}$ such that
+	     \begin{itemize}
+	      \item $\con{P}{\opsym{\E}{\qv{\rho} - \qv{P}}{\rho}}
+		    \xrightarrow{\alpha}
+		    \con{P'}{\rho'}$ holds, and
+	      \item  neither 
+		     \begin{itemize}
+		      \item $\rho' \equiv 
+			    \opsym{\texttt{proj}0}{b}{
+			    \opsym{\E}{\qv{\rho} -\qv{P}}{\rho}}$ nor
+		      \item $\rho' \equiv 
+			    \opsym{\texttt{proj}1}{b}{
+			    \opsym{\E}{\qv{\rho} -\qv{P}}{\rho}}$
+		     \end{itemize}
+		     holds for any $b \in \qv{P}$,
+	     \end{itemize}
+	     the procedure checks whether there exists
+	     $\con{Q'}{\sigma'}$
+	     such that
+	     \[
+	      \con{Q}{\opsym{\E}{\qv{\sigma} -
+	     \qv{Q}}{\sigma}} \weak{\hat \alpha}
+	     \con{Q'}{\sigma'}
+	     \]
+	     holds and 
+	     the procedure returns $\mathit{true}$ with the input
+	     $\con{P'}{\rho'}$,
+	     $\con{Q'}{\sigma'}$, and $\mathit{eqs}$. 
+       \item For each pair $(\con{P'}{\rho'}, \con{P''}{\rho''})$
+	     such that
+	     \begin{itemize}
+	      \item $\con{P}{\E\texttt{[}\qv{\rho} -
+		    \qv{P}\texttt{](}\rho\texttt{)}} \xrightarrow{\tau}
+		    \con{P'}{\rho'}$,
+	      \item $\rho' \equiv 
+		    \opsym{\texttt{proj0}}{b}{
+                    \opsym{\E}{\qv{\rho} -\qv{P}}{\rho}}$,
+	      \item $\con{P}{\E\texttt{[}\qv{\rho} -
+		    \qv{P}\texttt{](}\rho\texttt{)}} \xrightarrow{\tau}
+		    \con{P''}{\rho''}$, and
+	      \item $\rho'' \equiv 
+		    \opsym{\texttt{proj1}}{b}{
+                    \opsym{\E}{\qv{\rho} -\qv{P}}{\rho}}$
+	     \end{itemize}
+	     hold for some $b \in \qv{P}$,
+	     the procedure checks whether there exists a pair
+	     $(\con{Q'}{\sigma'}, \con{Q''}{\sigma''})$
+	     such that
+	     \begin{itemize}
+	      \item $\con{Q}{\E\texttt{[}\qv{\sigma} -
+		    \qv{Q}\texttt{](}\sigma\texttt{)}}
+		    \xrightarrow{\tau\ast}
+		    \con{\hat Q}{\hat \sigma}$,
+	      \item $\con{\hat Q}{\hat \sigma}
+		    \xrightarrow{\tau}
+		    \con{\hat Q'}
+                        {\opsym{\texttt{proj0}}{b}{\hat \sigma}}
+		    \xrightarrow{\tau\ast}
+		    \con{Q'}{\sigma'}$, and
+	      \item $\con{\hat Q}{\hat \sigma}
+		    \xrightarrow{\tau}
+		    \con{\hat Q''}
+                        {\opsym{\texttt{proj1}}{b}{\hat \sigma}}
+		    \xrightarrow{\tau\ast}
+		    \con{Q''}{\sigma''}$
+	     \end{itemize}
+	     hold for some $\hat Q$, $\hat Q'$, and $\hat Q''$, and
+	     \begin{itemize}
+	      \item Verifier1
+		    returns $\mathit{true}$ with $(\con{P'}{\rho'},
+		    \con{Q'}{\sigma'})$ and $\mathit{eqs}$, and
+	      \item Verifier1
+		    returns $\mathit{true}$ with $(\con{P''}{\rho''},
+		    \con{Q''}{\sigma''})$ and $\mathit{eqs}$.
+	     \end{itemize}
+      \end{enumerate}
+      If there exists, it goes
+      to the next step 7. Otherwise, it returns $\mathit{false}$.
+\item For each $\con{Q'}{\sigma'}$ such that
+      $\con{Q}{\E\texttt{[}\qv{\sigma} -
+      \qv{Q}\texttt{](}\sigma\texttt{)}} \xrightarrow{\alpha}
+      \con{Q'}{\sigma'}$,
+      the procedure checks the symmetric condition of the step 6.
+      If there exists, it returns $\mathit{true}$. Otherwise,
+      it returns $\mathit{false}$.
+\end{enumerate}
+The procedure always terminates.
+This is because the transition of the processes is finite and
+equality check in the step 4 always terminates.
+
+The step 2 prominently decreases the spaces to search.
+This is based on the fact that 
+$\con{\mathit{op}_1[\tilde q].P||\mathit{op}_2[\tilde
+r].Q}{\rho}$ and $ 
+\con{P||Q}{\F_{op_2}^{\tilde r}(\E_{op_1}^{\tilde q}(\rho))}$ are
+bisimilar, and \\
+ $\F_{op_2}^{\tilde r}(\E_{op_1}^{\tilde q}(\rho)) =
+\E_{op_1}^{\tilde q}(\F_{op_2}^{\tilde r}(\rho)) $ holds because $\tilde
+q \cap \tilde r = \emptyset$ and $\qv{P}\cap\qv{Q}=\emptyset$ hold.
+
+In Section \ref{symqccs:sndness}, when we prove soundness of
+Verifier1, we apply the fact that the numbers of $\mathtt{proj}i$'s
+are equal in $\rho$ and $\sigma$ if Verifier1 returns $\mathit{true}$
+with $\con{P}{\rho}$ and $\con{Q}{\sigma}$. The reason is as follows.
+There is the restriction that the both sides of an equation contains
+the same number of $\mathtt{proj}i$'s.
+This implies that rewriting by an arbitrary user-defined equation
+does not change the number of $\mathtt{proj}i$'s in a symbolic
+representation. Besides, the trace out procedure does not
+eliminate $\mathtt{proj}i$'s. Therefore, the numbers of 
+$\mathtt{proj}i$'s must be equal to have passed the equality test
+in the step 4. 
+
+We make here a remark about the step 6 (b).
+Suppose the following transitions are performed.
+\begin{itemize}
+ \item $ \con{P}{\E\texttt{[}\qv{\rho} -
+		    \qv{P}\texttt{](}\rho\texttt{)}}
+       \xrightarrow{\tau}
+       \con{P'}{\opsym{\mathtt{proj0}}{b}{\E\texttt{[}\qv{\rho} -
+       \qv{P}\texttt{](}\rho\texttt{)}}}$
+ \item $ \con{P}{\E\texttt{[}\qv{\rho} -
+		    \qv{P}\texttt{](}\rho\texttt{)}}
+       \xrightarrow{\tau}
+       \con{P''}{\opsym{\mathtt{proj1}}{b}{\E\texttt{[}\qv{\rho} -
+       \qv{P}\texttt{](}\rho\texttt{)}}}$
+\end{itemize}
+To return $\mathit{true}$ with $\con{P}{\rho},
+\con{Q}{\sigma}$, and $\mathit{eqs}$, 
+it requires the existence of $\con{Q'}{\sigma'}$ and
+$\con{Q''}{\sigma''}$ satisfying the conditions mentioned in 6
+(b), \emph{even if} $\braw{\opsym{\mathtt{proj0}}{b}{\E\texttt{[}\qv{\rho} -
+       \qv{P}\texttt{](}\rho\texttt{)}}} = O$ \emph{holds}, which
+means the probability of this transition is $0$.
+As for this case, in fact, only the 
+existence of $\con{Q''}{\sigma''}$ is necessary 
+in the proof of the soundness but that of
+$\con{Q'}{\sigma'}$ is not. Therefore, the condition
+that Verifier1 returns $\mathit{true}$ with $\con{P}{\rho}$ and
+$\con{Q}{\sigma}$ is stronger than the condition that
+the two qCCS configurations corresponding to them are bisimilar.
+
+\subsubsection{Memoization}
+We also employ a memoization technique. Let $\con{P}{\rho}$ and
+$\con{Q}{\sigma}$
+have the transitions $\con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$ and 
+$\con{Q}{\sigma} \xrightarrow{\alpha} \con{Q'}{\sigma'}$, and assume $\con{P'}{\rho'} \approx \con{Q'}{\sigma'}$.
+When checking whether $\con{P}{\rho} \approx \con{Q}{\sigma}$ holds, Verifier1 
+first checks $\con{Q}{\sigma}$ simulates $\con{P}{\rho}$'s transition. For $\con{P}{\rho}
+\xrightarrow{\alpha} \con{P'}{\rho'}$, Verifier1 finds $\con{Q}{\sigma} \xrightarrow{\alpha}
+\con{Q'}{\sigma'}$, and then recursively checks $\con{P'}{\rho'} \approx \con{Q'}{\sigma'}$.
+Verifier1 then checks $\con{P}{\rho}$ simulates $\con{Q}{\sigma}$'s transition. For the transition $\con{Q}{\sigma} \xrightarrow{\alpha} \con{Q'}{\sigma'}$, it finds
+the transition $\con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$, and next
+checks $\con{Q'}{\sigma'} \approx \con{P'}{\rho'}$. Since $\approx$ is a 
+symmetric relation, the last condition has been
+already obtained when checking $\con{P'}{\rho'} \approx
+\con{Q'}{\sigma'}$.
+Verifier1 reuses the result.
+
+\section{Soundness of Verifier1}
+\label{symqccs:sndness}
+Verifier1 is designed to be sound in the following sense.
+If Verifier1 returns $\mathit{true}$ for two configurations
+$\con{P}{\rho},
+\con{Q}{\sigma} \in \mathcal{P} \times \mathcal{S}$,
+and some valid user-defined equations, then
+the corresponding two configurations that are elements of $\Con$
+are bisimilar in the original qCCS. Our goal is to prove Theorem
+ \ref{symqccs:correspondence} that states the correspondence formally.
+In this section, we prepare lemmas to prove it.
+
+Suppose $\con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$ holds. 
+We say the transition $\xrightarrow{\alpha}$ is caused by {\it rule's
+name}, where {\it rule's name} is either $\mathrm{(In)},
+\mathrm{(Out)}, \mathrm{(Op)}, \mathrm{(Meas1)}$, or
+$\mathrm{(Meas0)}$, if the derivation tree begins with the application
+of the rule and
+$\mathrm{(Comm)}$ rule is not used. If $\mathrm{(Comm)}$ rule is used,
+we say the transition is caused by $\mathrm{(Comm)}$.
+We first prepare the notation to focus on a part of a process that causes
+a transition.
+
+\begin{defi} The evaluation contexts are defined as follows.
+ \[
+  C[\_] ::= \_ ~~|~~  C[\_]\lVert P ~~|~~ P\lVert C[\_] ~~|~~ C[\_]
+ \backslash L \]
+\end{defi}
+\begin{lem}
+\label{symqccs:redex}
+ If $\mathcal{P} \times \mathcal{S}
+ \ni \con{P}{\rho} \xrightarrow{\sndq{c}{q}} \con{P'}{\rho'}$,
+ then
+ $P = C[\sndq{c}{q}.P_0]$ and $P' = C[P_0]$
+ hold for some process $P_0$ and evaluation context $C[\_]$ that does 
+ not restrict $\mathsf{c}$.
+\end{lem}
+
+\begin{proof}
+ We prove it by induction of the number $n$ of application
+ of the transition rules. \\
+ (Case 1) Assume $n = 1$. The only rule to derive
+ $\xrightarrow{\sndq{c}{q}}$ with one time
+ application is $\mathrm{(Out)}$. Therefore, $P = \sndq{c}{q}.P_0$
+ holds.\\
+ (Case 2) Assume $n > 1$. The last rule applied is either 
+ $\mathrm{(Res)}, \mathrm{(Right)}$, or $\mathrm{(Left)}$.
+ We prove the case of $\mathrm{(Res)}$ as other cases are similar.
+ The last derivation is
+\[
+ \frac{~\con{P_1}{\rho} \xrightarrow{\sndq{c}{q}} \con{P'_1}{\rho}~~~
+  \mathsf{c} \notin L~} 
+ {\con{P_1 \backslash L}{\rho} \xrightarrow{\sndq{c}{q}}
+  \con{P'_1 \backslash L}{\rho}},
+\]
+where $P = P_1 \backslash L$ and $P' = P'_1 \backslash L$ 
+hold, for some $L$.
+By I.H., $P_1 = C[\sndq{c}{q}.P_2]$ and $P'_1 = C[P_2]$ for 
+some $C[\_]$ and $P_2$.
+We take an evaluation context $C'[\_] = C[\_] \backslash L$.
+As $\mathsf{c} \notin L$, $C'[\_]$ does not restrict $\mathsf{c}$.
+We then have $P = C'[\sndq{c}{q}.P_2]$ and $P' = C'[P_2]$.
+\end{proof}
+
+Lemma \ref{symqccs:redex} is for transitions caused by (Out).
+Transitions caused by (In), (Op), (Meas$i$), and (Comm) have
+a similar property since the derivations start from those and
+proceed by applying (Left), (Right), (Res) rules. The original
+qCCS also has a similar property.
+
+Next, we define the correspondence of processes in $\mathcal{P}$ and
+those in $\Proc$, where $\mathcal{P}$ is the set of 
+the processes of nondeterministic qCCS
+and $\Proc$ is the set of the processes of original qCCS.
+
+\begin{defi}
+ The function $\mathrm{cnv}: \mathcal{P} \rightarrow \Proc$
+ is inductively defined as follows.
+ \begin{align*}
+  &\cnv{\mathtt{discard[}\tilde q\mathtt{]}} =
+  \myif{\mathtt{false}}{I[\tilde q].\nil}\\
+  &\cnv{\sndq{c}{q}.P} = \sndq{c}{q}.\cnv{P} \\
+  &\cnv{\rcvq{c}{q}.P} = \rcvq{c}{q}.\cnv{P}\\
+  &\cnv{\mathit{op}\mathtt{[}\tilde q\mathtt{]}.P} =
+  \mathit{op}\mathtt{[}\tilde q\mathtt{]}.\cnv{P} \\
+  &\cnv{\measure{b}{P}} = \ket{1}\bra{1}[b;x].\myif{x = 1}{\cnv{P}}\\
+  &\cnv{P||Q} = \cnv{P}||\cnv{Q}\\
+  &\cnv{P \backslash L} = \cnv{P}\backslash L
+ \end{align*}
+For an evaluation context $C[\_]$, $\mathrm{cnv}(C)[\_]$ is the
+context of original qCCS process obtained applying $\mathrm{cnv}$ to
+all processes in $C[\_]$. 
+\end{defi}
+By the definition, we have the following proposition.
+\begin{prop}
+\label{symqccs:cnvinj}
+ $\qv{P}=\qv{\mathrm{cnv(P)}}$ holds.
+ If $\cnv{P} = \cnv{Q}$, then $P = Q$. 
+\end{prop}
+We then prove lemmas that state correspondence of original and
+Verifier1's frameworks.
+\begin{lem}
+ $\mathcal{P} \times \mathcal{S} \ni
+ \con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$ and
+ $\tr{}{\braw{\rho}} =
+ \tr{}{\braw{\rho'}}$ hold, then 
+ \[
+   \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \xrightarrow{\alpha} \mu \mbox{ and }
+\mu (\strg)^\dagger 1\bullet
+ \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}
+ \]
+ hold for some $\mu \in D(\Con)$.
+\end{lem}
+\begin{proof}
+%%%%
+ ($\alpha$ is $\sndq{c}{q}$)
+ By lemma \ref{symqccs:redex}, $P = C[\sndq{c}{q}.P_0]$ and 
+ $P' = C[P_0]$ holds for some evaluation
+ context $C[\_]$ and process $P_0$.
+ Since 
+ \[
+ \cnv{P} = \cnv{C[\sndq{c}{q}.P_0]} =
+ \cnv{C}[\sndq{c}{q}.\cnv{P_0}] \mbox{ and }
+ \cnv{P'} = \cnv{C[P_0]}
+ \]
+ hold,
+ $\con{\cnv{P}}
+      {\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ \xrightarrow{\sndq{c}{q}}
+ \con{\cnv{P'}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}$ holds. 
+ The conclusion of the lemma holds because identity is a 
+strong bisimulation.
+ \\
+%%%%
+ ($\alpha$ is $\rcvq{c}{q}$ or $\tau$ caused by
+ $\mathrm{Comm}$) Similar to the above case.\\
+%%%%
+ ($\alpha$ is $\tau$ caused by $\mathrm{Op}$) Similar to the above
+ cases
+ except that the quantum state changes. The correctness of 
+ the statement is checked observing that $\rho' =
+ \op{\mathit{op}}{\tilde r}{\mathtt{(}\rho\mathtt{)}}$ for some
+ $\mathit{op}[\tilde q]$and
+ $\E^{op}_{\tilde r}(\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}) =
+ \frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}$ holds because $\E^{op}$ is
+ trace-preserving.\\
+%%%%
+ ($\alpha$ is $\tau$ caused by $\mathrm{Meas1}$)
+ Similarly to lemma \ref{symqccs:redex}, $P = C[\measure{b}{P_0}]$ and 
+ $P' = C[P_0]$ holds for some evaluation
+ context $C[\_]$ and process $P_0$.
+ By $\tr{}{\braw{\rho}} = \tr{}{\braw{\rho'}} = 
+ \tr{}{\braw{\mathtt{proj1}[b](\rho)}} = 
+ \tr{}{\ket{1}\bra{1}_b\braw{\rho}}$,
+\begin{align*}
+ &\con{\cnv{C}[\ket{1}\bra{1}[b;x].\myif{x = 1}{\cnv{P_0}}]}
+ {\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} \xrightarrow{\tau}\\
+ &1 \bullet \con{\cnv{C}[\myif{1=1}{\cnv{P_0}}]}
+ {\frac{\ket{1}\bra{1}_b\braw{\rho}}
+  {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}
+\end{align*}
+ holds.
+ Since
+ \[
+\con{\myif{1=1}{\cnv{P_0}}}
+{\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+      {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}
+ (\strg)^\dagger
+\con{\cnv{P_0}}{\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+{\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}
+\]
+ and $\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b = \braw{\rho'}$
+ hold, 
+\[
+ 1 \bullet \con{\cnv{C}[\myif{1 = 1}{\cnv{P_0}}]}
+ {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+       {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}} (\strg)^\dagger
+1 \bullet \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}
+.
+\]
+holds by the congruence of $\strg$ (Proposition \ref{symqccs:strgcong}).
+\\
+%%%%
+ ($\alpha$ is $\tau$ caused by $\mathrm{Meas0}$) Similar to the
+ case of $\mathrm{Meas1}$.
+\end{proof}
+
+\begin{lem}
+\label{symqccs:weak}
+  $ \mathcal{P} \times \mathcal{S} \ni
+\con{P}{\rho} \weak{\hat \alpha} \con{P'}{\rho'}$ and
+ $\tr{}{\braw{\rho}} =
+ \tr{}{\braw{\rho'}}$ holds, then
+ $\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow (\xrightarrow{\hat \alpha})^\dagger \Rightarrow 
+ \mu$ and 
+ $\mu (\strg)^\dagger
+ \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}$
+ holds
+ for some $\mu \in D(\Con)$.
+\end{lem}
+\begin{proof}
+\label{symqccs:prfofweak}
+By assumption, we have
+\begin{itemize}
+ \item $\con{P}{\rho} \xrightarrow{\tau} \con{P_1}{\rho_1}
+       \xrightarrow{\tau} \cdots \xrightarrow{\tau} \con{P_k}{\rho_k}
+       \xrightarrow{\hat \alpha} 
+       \con{\hat P} {\hat \rho}
+       \xrightarrow{\tau} \con{P'_1}{\rho'_1}
+       \xrightarrow{\tau} \cdots \xrightarrow{\tau} \con{P'_m}{\rho'_m},$
+ \item $\tr{}{\braw{\rho}} = \tr{}{\braw{\rho_1}} = 
+       \cdots = \tr{}{\braw{\rho'}}$, and
+ \item $\con{P'_m}{\rho'_m} = \con{P'}{\rho'}$
+\end{itemize}
+for some $k$, $m$,
+$P_1$,...,$P_k$,$\hat P$,$P'_1$,...,$P'_m$
+$\rho_1$,...,$\rho_k$,$\hat \rho$,$\rho'_1$,...,$\rho'_m$.
+By $\con{P}{\rho} \xrightarrow{\tau} \con{P_1}{\rho_1}$ and
+$\tr{}{\braw{\rho}} = \tr{}{\braw{\rho_1}}$
+and the previous lemma, 
+\[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \xrightarrow{\tau} \mu_1 (\strg)^\dagger 
+ 1 \bullet \con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}} 
+\]
+holds for some $\mu_1 \in D(\Con)$. Next, we prove for all 
+$i \, (1 \le i \le k-1)$ that 
+$\con{P_i}{\rho_i}
+\xrightarrow{\tau} \con{P_{i+1}}{\rho_{i+1}}$ and
+$\tr{}{\braw{\rho_i}} = \tr{}{\braw{\rho_{i+1}}}$
+and
+\[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow \mu_i (\strg)^\dagger 
+ 1 \bullet \con{\cnv{P_i}}{\frac{\braw{\rho_i}}{\tr{}{\braw{\rho_i}}}} 
+ \mbox{ for some } \mu_i
+\]
+imply
+\[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ \mu_{i+1} (\strg)^\dagger 
+ 1 \bullet
+ \con{\cnv{P_{i+1}}}{\frac{\braw{\rho_{i+1}}}{\tr{}{\braw{\rho_{i+1}}}}} 
+ \mbox{ for some } \mu_{i+1}
+ .
+\]
+By $\con{P_i}{\rho_i}
+\xrightarrow{\tau} \con{P_{i+1}}{\rho_{i+1}}$ and
+$\tr{}{\braw{\rho_i}} = \tr{}{\braw{\rho_{i+1}}}$ and the previous
+lemma, we have 
+\[
+ \con{\cnv{P_i}}{\frac{\braw{\rho_i}}{\tr{}{\braw{\rho_i}}}} 
+ \Rightarrow
+ \mu'_{i+1} (\strg)^\dagger 
+ 1 \bullet
+ \con{\cnv{P_{i+1}}}{\frac{\braw{\rho_{i+1}}}{\tr{}{\braw{\rho_{i+1}}}}} 
+ \mbox{ for some } \mu'_{i+1}.
+\]
+By $\mu_i (\strg)^\dagger 1 \bullet
+ \con{\cnv{P_i}}{\frac{\braw{\rho_i}}{\tr{}{\braw{\rho_i}}}}$ and
+ $\con{\cnv{P_i}}{\frac{\braw{\rho_i}}{\tr{}{\braw{\rho_i}}}}
+ \Rightarrow
+ \mu'_{i+1}$, $\mu_i \Rightarrow \mu_{i+1}$ and\\
+ $\mu_{i+1} (\strg)^\dagger \mu'_{i+1}$ holds
+ for some $\mu_{i+1}$. We then have
+ \[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ \mu_i
+ \Rightarrow
+ \mu_{i+1} (\strg)^\dagger \mu'_{i+1} 
+ (\strg)^\dagger
+ 1 \bullet 
+\con{\cnv{P_{i+1}}}
+    {\frac{\braw{\rho_{i+1}}}{\tr{}{\braw{\rho_{i+1}}}}},
+ \]
+ namely,
+ \[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ \mu_{i+1} 
+ (\strg)^\dagger
+ 1 \bullet
+ \con{\cnv{P_{i+1}}}
+     {\frac{\braw{\rho_{i+1}}}{\tr{}{\braw{\rho_{i+1}}}}}
+ \mbox{ for some } \mu_{i+1}.
+ \]
+ Applying this argument repeatedly, we have
+ \[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ \mu_{k} 
+ (\strg)^\dagger
+ 1 \bullet
+ \con{\cnv{P_{k}}}
+     {\frac{\braw{\rho_{k}}}{\tr{}{\braw{\rho_{k}}}}}
+ \mbox{ for some } \mu_{k}.
+ \]
+By the similar argument, we have
+ \[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ (\xrightarrow{\hat \alpha})^\dagger
+ \hat \mu 
+ (\strg)^\dagger
+ 1 \bullet
+ \con{\cnv{\hat P}}
+     {\frac{\braw{\hat \rho}}{\tr{}{\braw{\hat \rho}}}}
+ \mbox{ for some } \hat \mu.
+ \]
+Furthermore, we have
+ \[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+ \Rightarrow
+ (\xrightarrow{\hat \alpha})^\dagger
+ \Rightarrow
+ \mu
+ (\strg)^\dagger
+ 1 \bullet
+ \con{\cnv{P'}}
+     {\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}
+ \mbox{ for some } \mu.
+ \]
+\end{proof}
+
+\begin{lem}
+ If 
+ \begin{itemize}
+  \item $ \mathcal{P} \times \mathcal{S} \ni
+	\con{P}{\rho} = \con{C[\measure{b}{P_0}]}{\rho}
+	\xrightarrow{\tau} 
+	\con{C[P_0]}{\mathtt{proj1}[b](\rho)} \defeq \con{P'}{\rho'}$ and
+  \item $\con{P}{\rho} 
+	\xrightarrow{\tau} 
+	\con{C[\mathtt{discard}(\qv{P_0})]}{\mathtt{proj0}[b](\rho)} \defeq
+	\con{P''}{\rho''}$
+ \end{itemize}
+ hold, then 
+\begin{itemize}
+ \item  $\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+	\xrightarrow{\tau} \mu$ and
+ \item  $\mu (\strg)^\dagger
+	\frac{\tr{}{\braw{\rho'}}}{\tr{}{\braw{\rho}}} \bullet
+	\con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}} +
+	\frac{\tr{}{\braw{\rho''}}}{\tr{}{\braw{\rho}}} \bullet
+	\con{\cnv{P''}}{\frac{\braw{\rho''}}{\tr{}{\braw{\rho''}}}}$
+\end{itemize}
+ hold for some $\mu \in D(\Con)$.
+\end{lem}
+\begin{proof}
+ We have
+ \begin{align*}
+ &\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}=
+ \con{\cnv{C}[\ket{1}\bra{1}[b;x].\myif{x =
+ 1}{\cnv{P_0}}]}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}\\
+\xrightarrow{\tau}
+ &\frac{\tr{}{\ket{0}\bra{0}_b\braw{\rho}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{C}[\myif{0 =
+ 1}{\cnv{P_0}}]}{\frac{\ket{0}\bra{0}_b\braw{\rho}\ket{0}\bra{0}_b}
+                    {\tr{}{\ket{0}\bra{0}_b\braw{\rho}}}}\\
+ &+\frac{\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{C}[\myif{1 = 1}{\cnv{P_0}}]}{\frac{\ket{1}\bra{1}_b\braw{\rho}
+  \ket{1}\bra{1}_b}{
+  \tr{}{\ket{1}\bra{1}_b\braw{\rho}}}} \defeq \mu.
+\end{align*}
+Besides, we have
+\begin{align*}
+&\con{\cnv{C}[\myif{0 =1}{\cnv{P_0}}]}
+ {\frac{\ket{0}\bra{0}_b\braw{\rho}\ket{0}\bra{0}_b}
+                    {\tr{}{\ket{0}\bra{0}_b\braw{\rho}}}}
+\\
+ \strg &\con{\cnv{C}[\myif{0 = 1}{I[\qv{P_0}].\nil}]}
+              {\frac{\ket{0}\bra{0}_b\braw{\rho}\ket{0}\bra{0}_b}
+                    {\tr{}{\ket{0}\bra{0}_b\braw{\rho}}}} =
+        \con{\cnv{P''}}{\frac{\braw{\rho''}}{\tr{}{\braw{\rho''}}}},
+\\
+&\mbox{and}\\
+&\con{\cnv{C}[\myif{1 = 1}{\cnv{P_0}}]}
+     {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+                    {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}
+\\
+ \strg &\con{\cnv{C}[\cnv{P_0}]}
+              {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+                    {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}} = 
+        \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}.
+\end{align*}
+We have the conclusion of the lemma by the linearity of
+$(\strg)^\dagger$.
+\end{proof}
+
+\begin{lem}
+\label{symqccs:prfofweakmeas}
+If
+\begin{itemize}
+ \item  $\mathcal{P} \times \mathcal{S} \ni
+	\con{P}{\rho} \xrightarrow{\tau\ast}
+	\con{C[\measure{b}{P'}]}{\rho'} 
+	\xrightarrow{\tau}
+	\con{C[P']}{\mathtt{proj1}[b](\rho')} 
+	\xrightarrow{\tau\ast} \con{P_1}{\rho_1}$,
+ \item  $\con{C[\measure{b}{P'}]}{\rho'} \xrightarrow{\tau}
+	\con{C[\mathtt{discard}(\qv{P'})]}{\mathtt{proj0}[b](\rho')}
+	\xrightarrow{\tau\ast}\con{P_0}{\rho_0}$, and
+ \item  $\tr{}{\braw{\rho}} = \tr{}{\braw{\rho'}} = 
+	\tr{}{\braw{\rho_0}} + \tr{}{\braw{\rho_1}}$
+\end{itemize}
+hold, then
+\begin{itemize}
+ \item $\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+       \Rightarrow \mu$ and
+ \item $\mu (\strg)^\dagger
+       \frac{\tr{}{\braw{\rho_0}}}{\tr{}{\braw{\rho}}} \bullet 
+       \con{\cnv{P_0}}{\frac{\braw{\rho_0}}{\tr{}{\braw{\rho_0}}}}
+       +\frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}} \bullet
+       \con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}$
+\end{itemize}
+hold for some $\mu \in D(\Con)$.
+\end{lem}
+\begin{proof}
+ By the same argument as the proof of Lemma \ref{symqccs:weak}, we have
+\begin{align*}
+\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ \Rightarrow 
+\mu_0 (\strg)^\dagger
+1 \bullet \con{\cnv{C[\measure{b}{P'}]}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}
+\end{align*}
+for some $\mu_0$.
+By the previous lemma, we have
+\begin{align*}
+ &1 \bullet \con{\cnv{C[\measure{b}{P'}]}}
+      {\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}} \Rightarrow \mu_1,
+\mbox{ and }\\
+\mu_1 (\strg)^\dagger
+ &\frac{\tr{}{\braw{\mathtt{proj0}[b](\rho')}}}{\tr{}{\braw{\rho}}}
+ \bullet 
+\con{\cnv{C[\mathtt{discard}(\qv{P'})]}}
+{\frac{\braw{\mathtt{proj0}[b](\rho')}}
+      {\tr{}{\braw{\mathtt{proj0}[b](\rho')}}}}\\
+&+\frac{\tr{}{\braw{\mathtt{proj1}[b](\rho')}}}{\tr{}{\braw{\rho}}}
+ \bullet
+\con{\cnv{C[P']}}{\frac{\braw{\mathtt{proj1}[b](\rho')}}{\tr{}{\braw{\mathtt{proj1}[b](\rho')}}}}.
+\end{align*}
+for some $\mu_1$.
+By
+\begin{align*}
+ &\tr{}{\braw{\rho'}} = \tr{}{\braw{\mathtt{proj0}[b](\rho')}} +
+ \tr{}{\braw{\mathtt{proj1}[b](\rho')}},\\
+ &\tr{}{\braw{\mathtt{proj0}[b](\rho')}} \ge \tr{}{\braw{\rho_0}},
+ \mbox{ and}\\
+ &\tr{}{\braw{\mathtt{proj1}[b](\rho')}} \ge \tr{}{\braw{\rho_1}},
+\end{align*}
+we have
+$\tr{}{\braw{\mathtt{proj0}[b](\rho')}} = \tr{}{\braw{\rho_0}}$
+and
+$\tr{}{\braw{\mathtt{proj1}[b](\rho')}} = \tr{}{\braw{\rho_1}}$.
+Let $\frac{\tr{}{\braw{\rho_0}}}{\tr{}{\braw{\rho}}} \defeq
+p_0$ and 
+$\frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}} \defeq
+p_1$.
+Now, we apply the same argument as the proof of 
+Lemma \ref{symqccs:weak}
+to each configuration. We have
+\begin{align*}
+ X \defeq &\con{\cnv{C[\mathtt{discard}(\qv{P'})]}}
+{\frac{\braw{\mathtt{proj0}[b](\rho')}}
+      {\tr{}{\braw{\mathtt{proj0}[b](\rho')}}}}
+\Rightarrow \mu_2 (\strg)^\dagger 
+\con{\cnv{P_0}}{\frac{\braw{\rho_0}}{\tr{}{\braw{\rho_0}}}}\\
+\mbox{and}&\\
+Y \defeq &\con{\cnv{C[P']}}
+ {\frac{\braw{\mathtt{proj1}[b](\rho')}}
+ {\tr{}{\braw{\mathtt{proj1}[b](\rho')}}}} 
+\Rightarrow \mu_3 (\strg)^\dagger 
+\con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}
+\end{align*}
+for some $\mu_2$ and $\mu_3$. We then have
+\begin{align*}
+\mu_1 (\strg)^\dagger &
+ p_0 \bullet X + p_1 \bullet Y
+ \Rightarrow
+ p_0 \mu_2 +  p_1 \mu_3 ~~ (\sharp)~~ \mbox{ and }\\
+ p_0 \mu_2 +  p_1 \mu_3
+ (\strg)^\dagger &
+ p_0 \bullet \con{\cnv{P_0}}{\frac{\braw{\rho_0}}{\tr{}{\braw{\rho_0}}}}
++
+ p_1 \bullet \con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}.
+\end{align*}
+By $(\sharp)$, we have $\mu_1 \Rightarrow \mu$ and $\mu (\strg)^\dagger
+p_0 \mu_2 + p_1 \mu_3$ for some $\mu$.
+Therefore,
+ \begin{align*}
+  &\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+  \Rightarrow \mu_0 \Rightarrow \mu_1 \Rightarrow \mu \mbox{ and}\\
+  &\mu  (\strg)^\dagger 
+  p_0 \bullet \con{\cnv{P_0}}{\frac{\braw{\rho_0}}
+  {\tr{}{\braw{\rho_0}}}}
+  +
+  p_1 \bullet
+  \con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}
+ \end{align*}
+hold.
+\end{proof}
+
+\begin{lem}
+ \label{symqccs:csimscon_point}
+ If
+ $\Proc \times \D(\H) \ni
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ \xrightarrow{\alpha}
+ \mu$ holds and $\mu$ is a point distribution, then
+ $\mathcal{P} \times \mathcal{S} \ni 
+ \con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$ and
+ $\mu (\strg)^\dagger
+ 1 \bullet \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}$
+ for some $\con{P'}{\rho'}$.
+\end{lem}
+\begin{proof}
+%%
+ ($\alpha$ is $\sndq{c}{q}$) There exist a qCCS's
+evaluation context $D[\_]$
+that does not restrict $\mathsf{c}$ and process $\tilde P \in
+\Proc$ such that
+$\cnv{P} = D[\sndq{c}{q}.\tilde P]$. There exist
+an evaluation context $C[\_]$ of simplified processes not 
+restricting $\mathsf{c}$ and
+$P_0 \in \mathcal{P}$ such that 
+$D[\_] = \cnv{C}[\_]$ and $\tilde P = \cnv{P_0}$.
+Therefore, $\cnv{P} = \cnv{C[\sndq{c}{q}.P_0]}$ holds.
+By Proposition \ref{symqccs:cnvinj}, $P = C[\sndq{c}{q}.P_0]$ holds.
+We then have $\con{P}{\rho} \xrightarrow{\sndq{c}{q}} 
+\con{C[P_0]}{\rho}$.
+We also have
+\[
+ \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ \xrightarrow{\sndq{c}{q}}
+ \con{D[\tilde P]}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ =
+ \con{\cnv{C[P_0]}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+\]
+%%
+ ($\alpha$ is $\rcvq{c}{q}$) This case is similar to the above case.\\
+%%
+ ($\alpha$ is $\tau$ caused by application of a TPCP map or
+communication) These cases are
+also similar to the case of $\sndq{c}{q}$.\\
+%%
+($\alpha$ is $\tau$ caused by measurement) We assume 
+the result of the measurement is $1$ with probability $1$.
+The argument of the other case is similar. We omit the
+similar argument as that in the case of $\sndq{c}{q}$.
+We have
+\begin{itemize}
+ \item $P = C[\measure{b}{P_0}]$, 
+ \item $\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+       \xrightarrow{\tau}
+       \con{D[\myif{1 = 1}{\tilde P}]}
+       {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+       {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}$
+ \item $\con{D[\myif{1 = 1}{\tilde P}]}
+       {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+       {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}
+       (\strg)^\dagger
+       \con{D[\tilde P]}
+       {\frac{\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b}
+       {\tr{}{\ket{1}\bra{1}_b\braw{\rho}}}}$, \mbox{ and}
+ \item $D[\tilde P] = \cnv{C[P_0]}$
+\end{itemize}
+for some $C[\_], b$, $P_0$, $D[\_]$, and $\tilde P$.
+\end{proof}
+\begin{lem}
+ \label{symqccs:csimscon_notpoint}
+ If
+ $\con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}}
+ \xrightarrow{\alpha}
+ \mu$ holds and $\mu$ is not a point distribution, then
+\begin{enumerate}
+ \item $\alpha$ is $\tau$,
+ \item $\con{P}{\rho} = \con{C[\measure{b}{P'}]}{\rho}$
+       for some evaluation context $C[\_]$, qubit variable $b$, process
+       $P'$,
+ \item $\con{P}{\rho} 
+       \xrightarrow{\tau}
+       \con{C[\discard{\qv{P'}}]}{\rho_1}
+       \defeq \con{P_1}{\rho_1}$,
+ \item $\con{P}{\rho} 
+       \xrightarrow{\tau}
+       \con{C[P']}{\rho_2} \defeq \con{P_2}{\rho_2}$, and
+ \item $\mu (\strg)^\dagger
+       \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+       \bullet 
+       \con{\cnv{P_1}}
+           {\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}} + 
+       \frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}}
+       \bullet 
+       \con{\cnv{P_2}}
+           {\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}}$
+\end{enumerate}
+\end{lem}
+\begin{proof}
+ Since $\mu$ is not a point distribution, 
+ the transition is caused by measurement (1).
+ Therefore, we have 
+ $P = C[\measure{b}{P'}]$ for some evaluation context
+ $C[\_]$, qubit variable $b$, and process $P'$ (2).
+ We have (3) and (4) immediately.
+ We also have
+\begin{align*}
+ \mu =
+ &\frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet \con{\cnv{C}[\myif{0 = 1}{\cnv{P'}}]}
+              {\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}\\
+ + 
+ &\frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet \con{\cnv{C}[\myif{1 = 1}{\cnv{P'}}]}
+             {\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}}\\
+(\strg)^\dagger &
+\frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet \con{\cnv{P_1}}
+              {\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}\\
+ + 
+ &\frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}}
+ \bullet \con{\cnv{P_2}}
+             {\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}}.
+\end{align*}
+\end{proof}
+
+\subsection{The Correspondence}
+The following theorem states the soundness of Verifier1.
+\begin{thm}
+\label{symqccs:correspondence}
+ If Verifier1 returns $\mathit{true}$ with the input $\con{P}{\rho},
+ \con{Q}{\sigma} \in \mathcal{P} \times \mathcal{S}$ satisfying
+ $\tr{}{\braw{\rho}}=\tr{}{\braw{\sigma}}=1$,
+ and a set of valid equations $\mathit{eqs}$, then
+ $\con{\cnv{P}}{\braw{\rho}}
+ \approx \con{\cnv{Q}}{\braw{\sigma}}$ holds.
+\end{thm}
+\begin{proof}
+We assume 
+that Verifier1 uses a simplified algorithm without the step 2 in
+which TPCP maps are performed without any transition.
+The theorem is still proven to hold with the step 2 extending the
+proof.
+
+ Assume all equations in $\mathit{eqs}$ are valid. We define
+\[
+ \R_{\mathit{eqs}} :=
+ \Set{(X, Y) |
+ \begin{array}{l}
+  \text{$X \strg \con{\cnv{P}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}},
+   Y \strg \con{\cnv{Q}}{\frac{\braw{\sigma}}{\tr{}{\braw{\sigma}}}}$,
+   and}\\
+  \text{Verifier1 returns $\mathit{true}$ with 
+ $\con{P}{\rho}$ and $\con{Q}{\sigma}$ using $\mathit{eqs}$.}
+ \end{array}
+ }.
+\]
+We then have $\con{\cnv{P}
+ }{\braw{\rho}} \R_{\mathit{eqs}} \con{\cnv{Q}}{\braw{\sigma}}$ if
+Verifier1 returns $\mathit{true}$ with the input $\con{P}{\rho},
+ \con{Q}{\sigma} \in \C$, $\tr{}{\braw{\rho}}=\tr{}{\braw{\sigma}}=1$,
+ and $\mathit{eqs}$. It is sufficient to show that $\R_{\mathit{eqs}}$
+ is a weak bisimulation relation. Let
+ $(X, Y)$ be
+ an arbitrary element in $\R_{\mathit{eqs}}$. The condition of
+ quantum variable is satisfied by the definition of $\cnv{}$.
+ The condition of partial trace is checked as follows.
+ \begin{align*}
+  \tr{\qv{\cnv{P}}}{\frac{\braw{\rho}}{\tr{}{\braw{\rho}}}} 
+  &= 
+  \frac{1}{\tr{}{\braw{\rho}}}\braw{\mathtt{Tr}[\qv{P}](\rho)}
+  && (\mbox{by the definition of } \braw{})\\
+  &= \frac{1}{\tr{}{\braw{\sigma}}}\braw{\mathtt{Tr}[\qv{Q}](\sigma)}
+  && (\mbox{by the validity of } \mathit{eqs})\\
+  &= \tr{\qv{\cnv{Q}}}{\frac{\braw{\sigma}}{\tr{}{\braw{\sigma}}}} 
+  && (\mbox{by the definition of } \braw{})
+ \end{align*}
+Next, we check the condition of simulation. Let $\E_{\tilde r}$ be
+an arbitrary TPCP map acting on $\tilde r \subseteq \sfqv - \qv{P}$.
+Assume $X \xrightarrow{\alpha} \mu$.
+By strong bisimulation,
+$\con{\cnv{P}}{\E_{\tilde r}(\frac{\braw{\rho}}{\tr{}{\braw{\rho}}})}
+\xrightarrow{\alpha} \mu'$ and $\mu (\strg)^\dagger \mu'$ hold.
+\\
+{\bf (Case 1)} Assume $\mu'$ is a point distribution.
+ By lemma \ref{symqccs:csimscon_point},
+ $\con{P}{\op{\bar \E}{\tilde r}(\rho)} \xrightarrow{\alpha}
+ \con{P'}{\rho'}$ interpreting $\bar \E$ as $\E_{\tilde r}$, 
+ and $\mu' (\strg)^\dagger
+ \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}$
+ hold for some $\con{P'}{\rho'}$. 
+Since Verifier1 returns $\mathit{true}$, 
+ there exists $\con{Q'}{\sigma'}$ such that 
+$\con{Q}{\op{\bar \E}{\tilde
+ r}(\sigma)} \weak{\hat \alpha} \con{Q'}{\sigma'}$ holds and
+ Verifier1
+ returns $\mathit{true}$ with $\con{P'}{\rho'}$. This implies 
+ $\tr{}{\braw{\sigma'}} = \tr{}{\braw{\rho'}} = 
+\tr{}{\braw{\op{\bar \E}{\tilde r}(\rho)}} = \tr{}{\braw{\bar \E[\tilde
+ r](\sigma)}}$. Now, we can apply Lemma \ref{symqccs:weak}.
+ We have 
+\[
+ \con{\cnv{Q}}{\E_{\tilde r}
+               (\frac{\braw{\sigma}}{\tr{}{\braw{\sigma}}})} 
+ \Rightarrow
+ \xrightarrow{\hat \alpha} 
+ \Rightarrow 
+ \nu'
+ (\strg)^\dagger
+ 1 \bullet
+ \con{\cnv{Q'}}{\frac{\braw{\sigma'}}{\tr{}{\braw{\sigma'}}}}
+\]
+ for some $\nu$.
+ Next, by strong bisimulation,
+ $Y 
+  \Rightarrow 
+  \xrightarrow{\hat \alpha} 
+  \Rightarrow 
+  \nu
+ $ and
+ $\nu' (\strg)^\dagger \nu$.
+ We then have
+\begin{align*}
+&\mu 
+ (\strg)^\dagger 
+ \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}
+ \mbox{  and  }
+\nu 
+ (\strg)^\dagger 
+ \con{\cnv{Q'}}{\frac{\braw{\sigma'}}{\tr{}{\braw{\sigma'}}}}.
+\end{align*}
+By the definition of $(\cdot)^\dagger$, $\mu$ can be
+written as $\sum_i p_i X'_i$ and
+$X'_i \strg  \con{\cnv{P'}}{\frac{\braw{\rho'}}{\tr{}{\braw{\rho'}}}}$
+for all $i$.
+Similarly, $\nu$ can be written as $\sum_j q_j Y'_j$ and
+$Y'_j \strg  \con{\cnv{Q'}}
+                 {\frac{\braw{\sigma'}}{\tr{}{\braw{\sigma'}}}}$
+for all $j$.
+Since Verifier1 returns $\mathit{true}$ with $\con{P'}{\rho'}$ and 
+$\con{Q'}{\sigma'}$, $X_i \R_{\mathit{eqs}} Y_j$ for all $i, j$.
+ holds. Therefore, $\sum_{i,j} p_i q_j X_i \R_{\mathit{eqs}}^\dagger
+ \sum_{i,j} p_i q_j Y_j$ holds. This is equivalent to
+ $\mu \R_{\mathit{eqs}}^\dagger \nu$.
+ \\
+{\bf (Case 2)}
+ Assume $\mu'$ is not a point distribution. 
+ By lemma \ref{symqccs:csimscon_notpoint},
+ $\con{P}{\op{\bar \E}{\tilde r}(\rho)} 
+  \xrightarrow{\tau}
+  \con{P_1}{\rho_1}$ and
+ $\con{P}{\op{\bar \E}{\tilde r}(\rho)}
+  \xrightarrow{\tau}
+  \con{P_2}{\rho_2}$ interpreting $\bar \E$ as
+ $\E_{\tilde r}$, and
+\[
+ \mu' (\strg)^\dagger 
+ \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet 
+ \con{\cnv{P_1}}
+ {\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}} + 
+ \frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}}
+ \bullet 
+ \con{\cnv{P_2}}
+ {\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}}
+\]
+hold.
+ Since Verifier1 returns $\mathit{true}$, there exists 
+ configurations $\con{Q_1}{\sigma_1}$ and $\con{Q_2}{\sigma_2}$ 
+ such that
+ \begin{itemize}
+  \item $\con{Q}{\op{\bar \E}{\tilde r}(\sigma)} \xrightarrow{\tau\ast} 
+	\con{D[\measure{b}{Q'}]}{\sigma'}$,
+  \item $\con{D[\measure{b}{Q'}]}{\sigma'} \xrightarrow{\tau}
+	\con{D[Q']}{\mathtt{proj1}[b](\sigma')} \xrightarrow{\tau\ast}
+	\con{Q_1}{\sigma_1}$,
+  \item $\con{D[\measure{b}{Q'}]}{\sigma'} \xrightarrow{\tau}
+	\con{D[\mathtt{discard}(\qv{Q'})]}{\mathtt{proj0}[b](\sigma')}\\
+	\xrightarrow{\tau\ast} \con{Q_2}{\sigma_2}$,
+ \end{itemize}
+ hold for some $D, b, Q'$ and $\sigma'$, and
+\begin{itemize}
+ \item Verifier1 returns $\mathit{true}$ with $\con{P_1}{\rho_1}$,
+       $\con{Q_1}{\sigma_1}$, and $\mathit{eqs}$.
+ \item Verifier1 returns $\mathit{true}$ with $\con{P_2}{\rho_2}$,
+       $\con{Q_2}{\sigma_2}$, and $\mathit{eqs}$.
+\end{itemize}
+ Moreover, $\tr{}{\braw{\sigma}} = \tr{}{\braw{\sigma'}}$ holds; 
+ Otherwise, $\tr{}{\braw{\sigma}} > \tr{}{\braw{\sigma'}}$ holds.
+ Since Verifier1 returns $\mathit{true}$ with two pairs
+ $\con{P}{\rho}$ and $\con{Q}{\sigma})$,
+ the numbers of
+ $\mathtt{proj}i$'s occurring in $\rho$ and $\sigma$ are equal
+ (Section \ref{symqccs:algorithmforbisim}).
+ Let the number be $N$.
+ In $\rho_1$, there are $N + 1$ $\mathtt{proj}i$'s.
+ By the transition, there are more than $N + 2$ $\mathtt{proj}i$'s or
+ $N + 2$ $\mathtt{proj}i$'s in $\sigma_1$. This contradicts that 
+ Verifier1 returned $\mathit{true}$ with 
+ $\con{P_1}{\rho_1}$ and $\con{Q_1}{\sigma_1}$, and thus
+ the numbers of $\mathtt{proj}i$'s in $\rho_1$ and $\sigma_1$ are
+ equal.
+
+ Next, by the validity of $\mathit{eqs}$,
+ $\tr{}{\braw{\rho_1}} = \tr{}{\braw{\sigma_1}}$ and
+ $\tr{}{\braw{\rho_2}} = \tr{}{\braw{\sigma_2}}$ hold.
+ Thus we have $\tr{}{\braw{\sigma_1}} + \tr{}{\braw{\sigma_2}} = 
+ \tr{}{\braw{\rho_1}} + \tr{}{\braw{\rho_2}} = 
+ \tr{}{\braw{\rho}} = \tr{}{\braw{\sigma}} = \tr{}{\braw{\sigma'}}$.
+ Now, we can apply the Lemma \ref{symqccs:prfofweakmeas} to have
+\begin{align*}
+&\con{\cnv{Q}}{\frac{\braw{\sigma}}{\tr{}{\braw{\sigma}}}}
+ \Rightarrow
+ \nu'\\
+&\nu'
+ (\strg)^\dagger
+ \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{Q_1}}{\frac{\braw{\sigma_1}}{\tr{}{\braw{\sigma_1}}}}
+ +\frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{Q_2}}{\frac{\braw{\sigma_2}}{\tr{}{\braw{\sigma_2}}}}
+\end{align*}
+for some $\nu'$.
+By strong bisimulation, 
+$Y \Rightarrow \nu$ and $\nu' (\strg)^\dagger \nu$ hold for some
+$\nu$.  We then have
+\begin{align*}
+ &\mu 
+ (\strg)^\dagger 
+ \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet 
+ \con{\cnv{P_1}}
+ {\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}} + 
+ \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}
+ \bullet 
+ \con{\cnv{P_2}}
+ {\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}} \defeq U\\
+ &\nu
+ (\strg)^\dagger
+ \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{Q_1}}{\frac{\braw{\sigma_1}}{\tr{}{\braw{\sigma_1}}}}
+ +\frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}} \bullet
+ \con{\cnv{Q_2}}{\frac{\braw{\sigma_2}}{\tr{}{\braw{\sigma_2}}}}
+ \defeq V
+\end{align*}
+Let $A, B, C$ and $D$ be
+$\con{\cnv{P_1}}{\frac{\braw{\rho_1}}{\tr{}{\braw{\rho_1}}}}$,
+$\con{\cnv{P_2}}{\frac{\braw{\rho_2}}{\tr{}{\braw{\rho_2}}}}$,
+$\con{\cnv{Q_1}}{\frac{\braw{\sigma_1}}{\tr{}{\braw{\sigma_1}}}}$,
+and
+$\con{\cnv{Q_2}}{\frac{\braw{\sigma_2}}{\tr{}{\braw{\sigma_2}}}}$,
+respectively.
+By the definition of $(\cdot)^\dagger$, $\mu$ is written as\\
+$\sum_{i \in I}p_i X_i + \sum_{j \in J}q_j X_j$ with 
+$I \cap J = \emptyset$, and
+$U$ is written as $\sum_{i \in I}p_i A + \sum_{j \in J}q_j B$, and
+$X_i \strg A$ for all $i \in I$, and
+$X_j \strg B$ for all $j \in J$. 
+$\sum_{i \in I} p_i = \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}$
+ and
+$\sum_{j \in J} q_j =
+\frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}}$ hold.
+Similarly,
+$\nu$ is written as\\
+$\sum_{k \in K}p'_k Y_k + \sum_{l \in L}q'_l Y_l$ with 
+$K \cap L = \emptyset$, and
+$V$ is written as $\sum_{k \in K}p'_k C + \sum_{l \in L}q'_l D$, and
+$Y_k \strg C$ for all $k \in K$, and
+$Y_l \strg D$ for all $l \in L$. 
+$\sum_{k \in K} p'_k = \frac{\tr{}{\braw{\rho_1}}}{\tr{}{\braw{\rho}}}$
+ and
+$\sum_{l \in L} q'_l =
+\frac{\tr{}{\braw{\rho_2}}}{\tr{}{\braw{\rho}}}$ hold.
+Since Verifier1 returns $\mathit{true}$ with \\
+$(\con{P_m}{\rho_m}, \con{Q_m}{\sigma_m})\,(m = 1,2)$,
+$X_i \R_{\mathit{eqs}} Y_k$ for all $i \in I, k \in K$, and
+$X_j \R_{\mathit{eqs}} Y_l$ for all $j \in J, l \in L$.
+We then have the conclusion $\mu (\R_{\mathit{eqs}})^\dagger \nu$
+observing 
+\begin{align*}
+ &\mu = \frac{\tr{}{\braw{\rho}}}{\tr{}{\braw{\rho_1}}}
+         \sum_{i,k}p_i p'_k X_i +
+        \frac{\tr{}{\braw{\rho}}}{\tr{}{\braw{\rho_2}}}
+         \sum_{j,l}q_j q'_l X_j \mbox{ and }\\
+ &\nu = \frac{\tr{}{\braw{\rho}}}{\tr{}{\braw{\rho_1}}}
+         \sum_{i,k}p_i p'_k Y_k +
+        \frac{\tr{}{\braw{\rho}}}{\tr{}{\braw{\rho_2}}}
+         \sum_{j,l}q_j q'_l Y_l.
+\end{align*}
+By definition of $\R$, $\R$ is symmetric and thus $\R^{-1}$ also
+satisfies the conditions.
+\end{proof}
+
+\section{Discussion}
+\subsection{On Completeness}
+Let us consider an ``ideal'' verifier that can test
+equality of partial traces perfectly.
+It takes two configurations
+$\con{P}{\rho}$ and $\con{Q}{\sigma}$, but does not take a
+set of user-defined equations. In the step 4 of the algorithm,
+it goes to the next step 
+if and only if $\braw{\ptrtt{\qv{P}}{\rho}} =
+\braw{\ptrtt{\qv{Q}}{\sigma}}$.
+Let us then consider the following statement.
+For $\con{P}{\rho},\con{Q}{\sigma} \in \mathcal{P} \times \mathcal{S}$,
+if $\tr{}{\braw{\rho}}=\tr{}{\braw{\sigma}}=1$ and
+$\con{\cnv{P}}{\braw{\rho}} \approx
+\con{\cnv{Q}}{\braw{\sigma}}$ hold, then
+the ideal verifier returns $\mathit{true}$ with
+the input $\con{P}{\rho},\con{Q}{\sigma}$.
+We call this
+\emph{the completeness of nondeterministic qCCS with respect to qCCS}.
+In fact, this statement is not true.
+A counter example is as follows.
+\begin{align*}
+ \con{P}{\braw{\rho}} &\defeq \con{\measure{b}{\discard{b,q}}}
+ {\ket{\psi}\bra{\psi}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E} \mbox{ and}
+\\
+ \con{Q}{\braw{\sigma}} &\defeq \con{\discard{b,q}}
+ {\ket{\psi}\bra{\psi}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E},
+ \mbox{ where}\\
+ \ket{\psi} &= \sqrt{\frac{1}{3}}\ket{0} + \sqrt{\frac{2}{3}}\ket{1}.
+\end{align*}
+The two transitions of $\con{P}{\braw{\rho}}$ are
+\begin{align*}
+ \con{P}{\braw{\rho}} &\xrightarrow{\tau} \con{\discard{b,q}}
+ {\frac{1}{3}\ket{0}\bra{0}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E}
+ \mbox{ and}\\
+ \con{P}{\braw{\rho}} &\xrightarrow{\tau} \con{\discard{b,q}}
+ {\frac{2}{3}\ket{1}\bra{1}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E}
+\end{align*}
+but partial traces of them ($\frac{1}{3}\rho^E$ and 
+$\frac{2}{3}\rho^E$) are not equal to that of $\con{Q}{\braw{\sigma}}$ (
+namely $\rho^E$). In our simplified formal framework,
+two configurations $\con{P_0}{\braw{\rho_0}}$ and $\con{Q_0}{\braw{\sigma_0}}$
+with $\tr{}{\rho_0} \neq \tr{}{\sigma_0}$ are always separated even if
+$\con{P_0}{\frac{\braw{\rho_0}}{\tr{}{\braw{\rho_0}}}}$ and
+$\con{Q_0}{\frac{\braw{\sigma_0}}{\tr{}{\braw{\sigma_0}}}}$ are identified.
+To identify such configurations, we must withdraw the simplification of 
+operational semantics.
+
+However, there seem to be a number of cases where we can assume that
+processes behave differently according to the result of quantum
+measurements.
+In general, we can formalize a QKD protocol of the form 
+\[
+ ... \mathtt{abort\_flag[...,}b\mathtt{,...].}\measure{b}{P'} ...,
+\]
+where an operator $\mathtt{abort\_flag}$ calculates the number of errors
+in check bits and sets a bit $b$ representing whether to abort the
+protocol. Alice and Bob continue to communicate
+only if the protocol has not aborted, which the outsider can
+recognize. 
+
+Besides, with our criteria discussed in Section \ref{symqccs:criteria},
+we expect that there is a transition of $R$
+with a label $\sndq{c}{q}$ or $\rcvq{c}{q}$, when a process
+$\measure{b}{R}$ is considered.
+Only for processes satisfying the condition, it is still possible that
+the completeness holds. It needs to be discussed precisely.
+
+% However, it seems not to be usual to consider a process like $P$
+% which behaves equivalently whichever result of a measurement 
+% it obtains. 
+% With our criteria, which we discussed in Section \ref{symqccs:criteria},
+% we expect that there is a transition of $R$
+% with a label $\sndq{c}{q}$ or $\rcvq{c}{q}$, when a process
+% $\measure{b}{R}$ is considered.
+% Only for processes satisfying the condition, it is still possible that
+% the statement be true. It needs to be discussed precisely.
+
+% Before simplifying the operational semantics, 
+% quantum states are always normalized (namely, trace is $1$) and thus
+% $\con{P}{\braw{\rho}} \approx \con{Q}{\braw{\sigma}}$ holds.
+% The key point is that
+% \begin{align*}
+%  \con{P}{\braw{\rho}} \xrightarrow{\tau}& \frac{1}{3}\con{\discard{b,q}}
+%  {\ket{0}\bra{0}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E}\\
+%  &\boxplus \frac{2}{3}\con{\discard{b,q}}
+%  {\ket{1}\bra{1}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E} \defeq \mu,\\
+%  \con{\discard{b,q}}{&\ket{0}\bra{0}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E}
+%  \approx \con{Q}{\braw{\sigma}}, \mbox{ and}\\
+%  \con{\discard{b,q}}{&\ket{1}\bra{1}_b \otimes \ket{0}\bra{0}_q \otimes \rho^E}
+%  \approx \con{Q}{\braw{\sigma}}
+% \end{align*}
+% hold and implies $\mu \approx^\dagger 1 \bullet \con{Q}{\braw{\sigma}}$.

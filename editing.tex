@@ -1,0 +1,225 @@
+%#BIBTEX jbibtex main
+\documentclass[doctor, 11pt, final]{iscs-thesis}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{proof}
+\usepackage{multicol}
+\usepackage[dvipdfmx]{graphicx}
+
+%-------------------
+\newcommand{\dom}[1]{\mathrm{dom}(#1)}
+\newcommand{\cod}[1]{\mathrm{cod}(#1)}
+\newcommand{\defequiv}[0]{\overset{\mathrm{def}}{\equiv}}
+\newcommand{\defeq}[0]{\overset{\mathrm{def}}{=}}
+\newcommand{\strg}[0]{\,\dot\approx\,}
+\newcommand{\xgizarrow}[1]{\overset{#1}{\rightsquigarrow}}
+
+\newcommand{\A}[0]{\mathcal{A}}
+\newcommand{\C}[0]{\mathcal{C}}
+\newcommand{\D}[0]{\mathcal{D}}
+\newcommand{\R}[0]{\mathcal{R}}
+\newcommand{\E}[0]{\mathcal{E}}
+\newcommand{\F}[0]{\mathcal{F}}
+\newcommand{\G}[0]{\mathcal{G}}
+\renewcommand{\H}[0]{\mathcal{H}}
+\newcommand{\I}[0]{\mathbb{I}}
+\newcommand{\N}[0]{\mathbb{N}}
+
+\newcommand{\CSS}[0]{\mathrm{CSS}}
+
+\newcommand{\Con}[0]{\mathit{Con}}
+\newcommand{\qChan}[0]{\mathit{qChan}}
+\newcommand{\Proc}[0]{\mathit{Proc}}
+\newcommand{\qVar}[0]{\mathit{qVar}}
+\newcommand{\Env}[0]{\mathit{Env}}
+\newcommand{\nil}[0]{\mathtt{nil}}
+\newcommand{\inds}[0]{\mathit{inds}}
+\newcommand{\eqs}[0]{\mathit{eqs}}
+\newcommand{\pr}[1]{{\rm pr}(#1)}
+\newcommand{\ptr}[2]{\mathtt{Tr}\texttt{[}#1\texttt{]}\texttt{(}#2\texttt{)}}
+\newcommand{\ptrtt}[2]{\texttt{Tr[}#1\texttt{](}#2\texttt{)}}
+\newcommand{\qv}[1]{\mathrm{qv}(#1)}
+\newcommand{\cnv}[1]{\mathrm{cnv}(#1)}
+\newcommand{\tr}[2]{{\rm tr}_{#1}(#2)}
+\newcommand{\braw}[1]{[\![#1]\!]}
+\newcommand{\brat}[1]{\langle #1 \rangle}
+\newcommand{\vecb}[1]{{\bf #1}}
+\newcommand{\con}[2]{\langle #1, #2 \rangle}
+\newcommand{\sndq}[2]{\mathsf{#1}! #2}
+\newcommand{\rcvq}[2]{\mathsf{#1}? #2}
+\newcommand{\subst}[2]{\{#1 / #2\}}
+
+\newcommand{\braket}[2]{\langle #1|#2\rangle}
+\newcommand{\bra}[1]{\langle #1|}
+\newcommand{\ket}[1]{|#1\rangle}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+
+\newcommand{\discard}[1]{\mathtt{discard(} #1 \mathtt{)}}
+\newcommand{\myif}[2]{\mathtt{if}~#1~\mathtt{then}~#2~\mathtt{fi}}
+\newcommand{\measure}[2]{{\tt meas}~#1~{\tt then}~#2~{\tt saem}}
+
+\newcommand{\op}[2]{#1[#2]}
+\newcommand{\dsym}[2]{#1\texttt{[}#2\texttt{]}}
+\newcommand{\opapp}[3]{#1_{#2}(#3)}
+\newcommand{\opsym}[3]{#1\texttt{[}#2\texttt{]}\texttt{(}#3\texttt{)}}
+
+\newcommand{\weak}[1]{\xrightarrow{\tau*} \xrightarrow{#1}
+\xrightarrow{\tau*}}
+
+\newcommand{\barb}[4]{#1 \Downarrow^{#2} (#3, #4)}
+
+\newcommand{\brac}[1]{\{#1\}}
+\newcommand{\EPR}[0]{\mathit{EPR}}
+\newcommand{\sfqv}[0]{\mathit{qVar}}
+\newcommand{\pair}[2]{(#1, #2)}
+%-------------------
+\newtheorem{defi}{Definition}
+\newtheorem{prf}[defi]{Proof}
+\newtheorem{prop}[defi]{Proposition}
+\newtheorem{thm}[defi]{Theorem}
+\newtheorem{lem}[defi]{Lemma}
+\newtheorem{clm}[defi]{Claim}
+\newtheorem{col}[defi]{Corollary}
+\newtheorem{ex}[defi]{Example}
+
+%-------------------
+
+\etitle{Application of Formal Methods \\
+to Quantum Cryptography}
+\jtitle{·Á¼°Åª¼êË¡¤ÎÎÌ»Ò°Å¹æ¤Ø¤Î±þÍÑ}
+\eauthor{Takahiro Kubota}
+\jauthor{µ×ÊÝÅÄ µ®Âç}
+\esupervisor{Masami Hagiya}
+\jsupervisor{ÇëÃ« ¾»¸Ê}
+\supervisortitle{Professor} % Professor, etc.
+\date{December 13, 2013}
+%-------------------
+\begin{document}
+%\listoftables
+%-------------------
+We next introduce researches about formal verification of
+classical security protocols.
+\subsection{CryptoVerif}
+$\mathsf{CryptoVerif}$ \cite{...} is a software tool to verify security of
+\emph{classical} protocols, which is applied to a number of
+protocols. 
+There are two features of $\mathsf{CryptoVerif}$ that are 
+related to our verifiers: it is designed on the basis of a probabilistic
+process calculus, and it handles negligibility.
+Of course, it cannot be applied to verify security of QKD
+protocols, because a process, which may be an adversary,
+described in $\mathsf{CryptoVerif}$'s framework 
+is bounded in polynomial time with respect to security parameters, while
+an advesary against a QKD protocol is not. 
+Nevertheless, there are several points which are worth comparing to
+ours.
+
+As a proof technique, $\mathsf{CryptoVerif}$ applies 
+\emph{observational equavalence} of processes.
+Let $\Pr(P \rightsquigarrow a)$
+be the probability\footnote{Semantics of a probabilistic process
+calculus is possibily be both nondeterministic and probabilistic but
+that of $\mathsf{CryptoVerif}$'s framework is only
+probabilistic. When there are choices in a execution point, 
+the same probability is assigned to each.}
+that the process $P$ transits to a process that is ready to send some
+data through the channel $a$.
+Two processes $P$ and $Q$ are observationally equivalent, written
+$P \approx Q$, if
+$$
+|\Pr(C[P] \rightsquigarrow a) - \Pr(C[Q] \rightsquigarrow a)|
+$$
+is negligible for all evaluation context\footnote{An evaluation context
+is composed by a hole, channel restrictions, and
+parallel compositions.} $C[\_]$ running in polynomial time
+and channel $a$ that is
+not restricted. 
+The relation $\approx$ is congruent by the definition,
+namely, if $P \approx Q$ holds, then $C[P] \approx C[Q]$ holds for all
+evaluation context $C[\_]$ running in polynomial time.
+When we consider $C[\_]$ as a polynomial time
+adversary that runs in parallel with the protocol $P$ or $Q$,
+the observational equivalence of them is intuitively considered
+as indistinguishability of the protocols from the view point of the 
+adversary.
+% A strong point of $\mathsf{CryptoVerif}$ is that
+% it does not idealize cryptographic primitives.
+
+In general, security of cryptographic protocols or schemes
+is reduced to security of the cryptographic primitives that a protocol
+employs or to difficulty of computing certain functions.
+For example, FDH signature scheme \cite{...}
+is proven EUF-CMA secure assuming it employs
+a one-way trapdoor permutation and a hash function
+that can be replaced with the \emph{random oracle}.
+In $\mathsf{CryptoVerif}$, a user formalizes such assumptions as
+observational equivalence of processes. A possible flow to successfully
+verify security of a protocol using $\mathsf{CryptoVerif}$ is as follows.
+First, the user formalizes the protocol as a process $P$, which
+may contain \emph{bad-event flags} in some conditional branches.
+He then gives $\mathsf{CryptoVerif}$ some assumptions
+$X_i \approx Y_i ~ (i=1,2,...)$. $\mathsf{CryptoVerif}$ finds
+that $P \equiv C[X_i]$ for some evaluation
+context $C[\_]$ and $i$, where $\equiv$ means syntactic equality.
+Then, $P$ is rewritten to $P_1 \equiv C[Y_i]$. Thanks to the congruence,
+$P \approx P_1$ holds. $\mathsf{CryptoVerif}$ continues to
+apply the assumptions. $\mathsf{CryptoVerif}$ also rewrites the process
+based on general rules preserving the relation $\approx$.
+It removes assignments of variables.
+Some of the assumptions possibly become applicable after the removing.
+It also eliminates branches whose conditions are false.
+In a case of success, all the branches contaning the bad-event flags are
+eliminated. Let $Q$ be the process obtained after the rewriting and
+containing no bad-event flag. Since 
+the rewriting preserves $\approx$, $P \approx Q$ holds.
+This means that the protocol 
+$P$ is secure, because it is indistinguashable with $Q$ where
+no bad-event happens.
+
+Let us compare two frameworks, $\mathsf{CryptoVerif}$'s and ours.
+First, equivalence of processes or configurations is characterized by
+observational
+equivalence in the former, while it is by weak bisimulation in the
+latter. 
+No notion of bisimulation processes in the former
+framework has been proposed, although bisimulation is often easier to verify
+than observational equivalence in which \emph{arbitary evaluation
+contexts} are taken into account.
+
+In $\mathsf{CryptoVerif}$'s framework, 
+a case seems to be rare where we must directly prove observational
+equivalence of processes $P$ and $Q$ taking an arbitarary 
+evaluation context $C[\_]$. What one must prove for a classical
+security protocol is that the security of it is reduced to the
+assumed security of employed primitives or difficulity of computing
+certain functions. Such assumptions are formalized as observational
+equivalence but they are not what we must prove. The
+observational equivalence that means the security of the target protocol
+is derived from the assumed observational equivalence, where
+arbitrary property of the adversary against the target protocol are
+reduced to those of the adversary against the primitives or 
+algorithm for the functions. As a proof strategy, syntactic
+transformation of a code formalizing a protocol is
+more efficient than tracing all the possible execution paths of it.
+
+In qCCS's framework, no notion of observational equivalence that can be
+considered as an analogy of $\mathsf{CryptoVerif}$'s has not been
+proposed. The barbed congruence \cite{DengFeng2012} seems to be stronger
+as it is equal to the bisimulation.
+Fortunately, the bisimulation is congruence, which possibly allow us
+syntactic reasoning: one may derive bisimilarity of small-size
+configurations from small-size ones.
+One main diffirence is that 
+when we prove security of quantum protocols,
+we do not assume security of primitives or difficulty of computing
+certain functions. Therefore, we possibly need to prove bisimilarity of
+small-size configurations unlike in verification using $\mathsf{CryptoVerif}$.
+
+\nocite{*}
+\bibliographystyle{plain}
+%\bibliographystyle{unsrt}
+\bibliography{main}
+
+\end{document}

@@ -1,0 +1,764 @@
+\section{Approximate Bisimulation up to Negligible Difference}
+\label{neg}
+In this section we assume that quantum states depend on
+security parameters, namely, 
+we assume that $\H$ is a function of natural numbers.
+For example, an $n$ bit randomness is represented as
+the operator 
+$(\frac{1}{2}\ket{0}\bra{0} + \frac{1}{2}\ket{1}\bra{1})^{\otimes n}$
+whose state space $\H$ is $2^n$-dimensional.
+As for transitions of configurations, we define
+that $\con{P}{\rho} \xrightarrow{\alpha} \con{P'}{\rho'}$ holds if and
+only if 
+$\con{P}{\rho(n)} \xrightarrow{\alpha} \con{P'}{\rho'(n)}$ holds 
+for all $n$. Trace distance
+$d(\rho, \sigma)$ is also regarded as a
+function of natural numbers.
+For example, $d(\ket{0}\bra{0}^{\otimes n}, \ket{+}\bra{+}^{\otimes n})
+= 1 - \frac{1}{2^n}$ holds.
+if $d(\rho, \sigma)$ and $d(\sigma, \theta)$ are negligible,
+then $d(\rho, \theta)$ is negligible. 
+As a result, we could define the
+approximate bisimulation relation $\sim$, which is
+transitive and thus is an equivalence relation.
+The definition of an approximate bisimulation relation 
+is as follows.
+\begin{defi}
+\label{neg:defofapproxbisim}
+ A symmetric relation $\R \subseteq \C \times \C$ is called an
+ approximate bisimulation
+ if for all $\con{P}{\rho} \R \con{Q}{\sigma}$,
+ \begin{enumerate}
+  \item $\qv{P} = \qv{Q} \defeq \tilde q$,
+  \item $d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma})$ 
+	is negligible, and
+  \item for all CP map $\E_{\tilde r}$ acting
+	on $\tilde r \subseteq \sfqv - \tilde q$,
+	if $\con{P}{\E_{\tilde r}(\rho)}
+	\xrightarrow{\alpha}
+	\con{P'}{\rho'}$ holds and $\tr{}{\rho'}$ is
+	non-negligible, then
+	$\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha}
+	\con{Q'}{\sigma'}$ and
+	$\con{P'}{\rho'} \R \con{Q'}{\sigma'}$ holds for
+	some $\con{Q'}{\sigma'}$. 
+ \end{enumerate}
+\end{defi}
+We call the above conditions {\it 1}, {\it 2} the static conditions and
+{\it 3} the simulation condition.
+
+\begin{defi}
+\label{neg:defofapprox}
+ We define 
+ \[
+ \sim = \{(\C, \D) \in 
+ \Con \times \Con~|~
+ \C\R\D \mbox{ holds for some approximate bisimulation } \R \}.
+ \]
+ We say $\C$ and $\D$ are approximately bisimilar if
+ $\C \sim \D$. 
+\end{defi}
+
+There is another possible definition of the relation.
+Let us replace the requirement ``$\tr{}{\rho'}$ is non-negligible'' in the condition
+3 with ``$\frac{\tr{}{\rho'}}{\tr{}{\E_{\tilde r}(\rho)}}$ is non-negligible'', and
+let $\simeq$ be the relation defined similarly to
+Definition \ref{neg:defofapprox}.
+Since $\frac{\tr{}{\rho'}}{\tr{}{\E_{\tilde r}(\rho)}} \ge
+\tr{}{\rho'}$ holds, $\simeq \subseteq \sim$
+holds. In fact, the relation $\simeq$
+has properties that are similar to those discussed in the following
+propositions, lemmas, and theorem.
+We adopt Definition \ref{neg:defofapproxbisim} for the following reason.
+It is natural that we assume a configuration $\con{P_0}{\rho_0}$ satisfies
+$\tr{}{\rho_0} = 1$ when it formalizes a protocol.
+Suppose we have $\con{P_0}{\rho_0} \xrightarrow{\alpha_0} \cdots
+\xrightarrow{\alpha_k} \con{P}{\rho} \xrightarrow{\alpha}
+\con{P'}{\rho'}$, that $\tr{}{\rho}$ is non-negligible and
+that $\tr{}{\rho'}$ is negligible. The probability to reach
+$\con{P}{\rho}$ is non-negligible and to reach $\con{P'}{\rho'}$ is
+negligible.
+Therefore, we want to care $\con{P}{\rho}$ but ignore $\con{P'}{\rho'}$.
+However, a case is possible where a configuration $\con{Q_0}{\sigma_0}$
+must simulate the transition $\con{P}{\rho} \xrightarrow{\alpha}
+\con{P'}{\rho'}$ to satisfy $\con{P_0}{\rho_0} \simeq
+\con{Q_0}{\sigma_0}$. This is because $\frac{\tr{}{\rho'}}{\tr{}{\rho}}$
+can be non-negligible even if $\tr{}{\rho'}$ is negligible and
+$\tr{}{\rho}$ is non-negligible by the definition of negligible
+functions. We thus cannot ignore $\con{P'}{\rho'}$.
+
+The following lemmas are similarly proven as the previous section.
+\begin{lem}
+\label{neg:coinduction}
+$\con{P}{\rho} \sim \con{Q}{\sigma}$ holds,
+ iff
+ \begin{enumerate}
+  \item $\qv{P} = \qv{Q} \defeq \tilde q$,
+  \item $d(\tr{\tilde q}{\rho}, \tr{\tilde q}{\sigma})$
+	is negligible, and
+  \item for all CP map $\E_{\tilde r}$ acting
+	on $\tilde r \subseteq \sfqv - \tilde q$,
+	\begin{itemize}
+	 \item if $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+	       \con{P'}{\rho'}$ holds and $\tr{}{\rho'}$ is
+	       non-negligible, then
+	       there exists $\con{Q'}{\sigma'}$ satisfying
+	       $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha}
+	       \con{Q'}{\sigma'}$ and
+	       $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$,
+	       and
+	 \item if $\con{Q}{\E_{\tilde r}(\sigma)} \xrightarrow{\alpha}
+	       \con{Q'}{\sigma'}$ holds and $\tr{}{\sigma'}$ is
+	       non-negligible, then
+	       there exists $\con{P'}{\rho'}$ satisfying
+	       $\con{P}{\E_{\tilde r}(\rho)} \weak{\hat \alpha}
+	       \con{P'}{\rho'}$ and 
+	       $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$.
+	\end{itemize}
+ \end{enumerate}
+\end{lem}
+\begin{lem}\label{neg:soclosed}
+ If $\con{P}{\rho} \sim \con{Q}{\sigma}$, then 
+ $\con{P}{\E_{\tilde r}(\rho)} \sim \con{Q}{\E_{\tilde r}(\sigma)}$
+ for all CP map $\E_{\tilde r}$ that acts on $\tilde r$. 
+\end{lem}
+\begin{prop}
+\label{neg:sym-by-par}
+ $\con{P||Q}{\rho} \sim \con{Q||P}{\sigma}$.
+\end{prop}
+
+We then prepare lemmas to prove transitivity of the relation
+$\sim$.
+\begin{lem}
+\label{neg:weaksimulated}
+ If $\con{P}{\rho} \sim \con{Q}{\sigma}$ and 
+$\con{P}{\rho} \xrightarrow{\tau\ast} \con{P'}{\rho'}$ and
+ $\tr{}{\rho'}$ is non-negligible, then
+$\con{Q}{\sigma} \xrightarrow{\tau\ast}
+ \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$ hold
+ for some $\con{Q'}{\sigma'}$.
+\end{lem}
+\begin{proof}
+ Assume $\con{P}{\rho} \xrightarrow{\tau}^n \con{P'}{\rho'}$
+ and let $\con{P_i}{\rho_i}$ be $i$-th configuration with $0 \le i \le
+ n$. The case when $n = 0$ is trivial. Let $n > 0$.
+ Since $\rho = \rho_0 \ge \rho_1 \cdot\cdot\cdot \ge \rho_n =
+ \rho'$ holds and $\tr{}{\rho'}$ is non-negligible, 
+ $\tr{}{\rho_i}$ is non-negligible for all $i$. Therefore,
+ $\con{Q}{\sigma} \xrightarrow{\tau\ast}^n
+ \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$ hold
+ for some $\con{Q'}{\sigma'}$.
+\end{proof}
+
+\begin{lem}
+\label{neg:simulateweak}
+If $\con{P}{\rho} \sim \con{Q}{\sigma}$ and 
+$\con{P}{\rho} \weak{\hat \alpha} \con{P'}{\rho'}$ and
+ $\tr{}{\rho'}$ is non-negligible, then
+$\con{Q}{\sigma} \weak{\hat \alpha}
+ \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$
+ for some $\con{Q'}{\sigma'}$.
+\end{lem}
+
+\begin{proof}
+ It is similarly proven as the previous lemma.
+\end{proof}
+
+\begin{lem}
+\label{neg:equivalence}
+ $\sim$ is an equivalence relation.
+\end{lem}
+\begin{proof}
+ {\bf (Reflexivity)} 
+ Let $\mathit{Id}_\C$ be the identity relation on $\C$.
+ For all $\con{P}{\rho} \in \C$, 
+ $\con{P}{\rho}\mathit{Id}_\C \con{P}{\rho}$ holds.
+ It is sufficient to show
+ $\mathit{Id}_\C$ is an approximate bisimulation. 
+ Assume $(\con{P}{\rho},
+ \con{P}{\rho})$ is an arbitrary element in $\mathit{Id}_\C$ and
+ $\tr{}{\rho}$ is non-negligible. The static conditions are 
+ easily checked.
+ Let $\E_{\tilde r}$ be an arbitrary CP map and assume
+ $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+ \con{P'}{\rho'}$ and $\tr{}{\rho'}$ is negligible. As
+ $\con{P'}{\rho'}\mathit{Id}_\C \con{P'}{\rho'}$ holds,
+ $\mathit{Id}_\C$
+ is an approximate bisimulation. \\
+ {\bf (Symmetry)} 
+ ($\Rightarrow$) implication of
+ Lemma \ref{neg:coinduction} is the condition that $\sim$ is 
+ an approximate bisimulation.
+ An approximate bisimulation relation
+ is defined to be symmetric. 
+ \\
+ {\bf (Transitivity)} It is sufficient to show $\sim \circ \sim$
+ is an approximate bisimulation relation. Let $(\con{P}{\rho},
+ \con{R}{\theta})$ be an arbitrary element of $\sim \circ
+ \sim$. There exists $\con{Q}{\sigma}$ satisfying
+ $\con{P}{\rho} \sim \con{Q}{\sigma}$ and $\con{Q}{\sigma}
+ \sim {\con{R}{\theta}}$. 
+ The static conditions are easily checked using
+ triangle inequality of trace distance $d(\cdot, \cdot)$.
+ Let $\E_{\tilde r}$ be an arbitrary
+ CP map acting on $\tilde r \subseteq \sfqv - \qv{P}$ and
+ assume $\con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha}
+ \con{P'}{\rho'}$ and $\tr{}{\rho'}$ is non-negligible.
+ By $\con{P}{\rho} \sim \con{Q}{\sigma}$, there exists
+ $\con{Q'}{\sigma'}$ satisfying $\con{Q}{\E_{\tilde r}(\sigma)} 
+ \weak{\hat \alpha} \con{Q'}{\sigma'}$ and $\con{P'}{\rho'} \sim
+ \con{Q'}{\sigma'}$. By its static conditions, we have
+ $d(\tr{\qv{P'}}{\rho'}, \tr{\qv{Q'}}{\sigma'})$ is negligible.
+ This implies $|\tr{}{\rho'} - \tr{}{\sigma'}|$ is 
+ negligible and thus we have
+ that $\tr{}{\sigma'}$ is non-negligible.
+ We have $\con{Q}{\E_{\tilde r}(\sigma)}
+ \sim \con{R}{\E_{\tilde r}(\theta)}$ applying lemma
+ \ref{neg:soclosed} to $\con{Q}{\sigma}
+ \sim {\con{R}{\theta}}$. Next by lemma
+ \ref{neg:simulateweak}, we have $\con{R}{\E_{\tilde r}(\theta)}
+ \weak{\hat \alpha} \con{R'}{\theta'}$ and $\con{Q'}{\sigma'}
+ \sim \con{R'}{\theta'}$ for some $\con{R'}{\theta'}$. 
+ Therefore, $\con{P'}{\rho'}\sim \circ \sim \con{R'}{\theta'}$.
+\end{proof}
+We prove congruence of the relation $\sim$. 
+We first show that $\sim$ is closed by restriction.
+\begin{lem}
+\label{neg:resclosed}
+ If $\con{P}{\rho} \sim \con{Q}{\sigma}$ holds, then
+ $\con{P \backslash L}{\rho} \sim \con{Q \backslash L}{\sigma}$ holds.
+\end{lem}
+\begin{proof}
+It is similarly proven as Lemma \ref{par:resclosed}.
+\end{proof}
+
+The next theorem states that the relation $\sim$ is closed
+under parallel composition of processes.
+With this theorem and Lemma \ref{neg:resclosed}, we immediately 
+have that $\sim$ is closed by application of an arbitrary evaluation
+context.
+The structure of the proof is same as \ref{par:pallaclosed}. 
+\begin{thm}
+\label{neg:parclosed}
+  If $\con{P}{\rho} \sim \con{Q}{\sigma}$, then
+ $\con{P||R}{\rho} \sim \con{Q||R}{\sigma}$ for all
+ process $R$.
+\end{thm}
+\begin{proof}
+ We define 
+\[
+ \R := \{(\con{P||R}{\rho}, \con{Q||R}{\sigma})\,|\,
+ \con{P}{\rho} \sim \con{Q}{\sigma}, R \in \mathcal{P}
+ \}. 
+\]
+ It is sufficient to show $\R$ is an approximate bisimulation.
+ $\R$ is symmetric by the definition.
+ Let $(\con{P||R}{\rho}, \con{Q||R}{\sigma})$ be an arbitrary element in
+ $\R$. The static conditions and the simulation condition 
+ are checked similarly to Theorem \ref{par:pallaclosed}.
+\end{proof}
+Similarly to the discussion in the previous section,
+we have the following corollary.
+\begin{col}
+\label{neg:congruence}
+ If $\con{P}{\rho} \sim \con{Q}{\sigma}$ holds, then
+ $\con{C[P]}{\rho} \sim \con{C[Q]}{\sigma}$ holds for
+ all evaluation context $C[\_]$.
+\end{col}
+We have proved that the relation $\sim$ is equivalence and closed
+by application of an arbitrary evaluation context.
+We thus say it is congruent. The congruence 
+suggests sanity of the definition as well as feasibility in practice.
+For example, it allows us to infer equivalence of
+multiple sessions of protocols.
+\begin{col}
+\label{neg:multisession}
+ If $\con{P_1}{\rho_1 \otimes \rho^E_1} \sim \con{Q_1}{\sigma_1
+ \otimes \rho^E_1}$,
+$\con{P_2}{\rho_2 \otimes \rho^E_2} \sim \con{Q_2}{\sigma_2 \otimes
+ \rho^E_2}$ and $\qv{P_1}\cap \qv{P_2}=\qv{P_1}\cap \qv{Q_2}=\qv{Q_1}\cap
+ \qv{P_2}=\qv{Q_1}\cap \qv{Q_2}=\emptyset$
+ hold for all $\rho^E_1, \rho^E_2$, then
+$\con{P_1 || P_2}{\rho_1 \otimes \rho_2 \otimes \rho^E} \sim \con{Q_1 ||
+ Q_2}{\sigma_1 \otimes \sigma_2 \otimes \rho^E}$ holds for all $\rho^E$.
+\end{col}
+\begin{proof}
+We have $\con{P_1}{\rho_1 \otimes \rho_2 \otimes \rho^E}
+\sim \con{Q_1}{\sigma_1 \otimes \rho_2 \otimes \rho^E}$ by substituting
+$\rho_2 \otimes \rho^E$ for $\rho^E_1$ in the assumption.
+By congruence, we have $\con{P_1||P_2}{\rho_1 \otimes \rho_2 \otimes \rho^E} \sim
+ \con{Q_1||P_2}{\sigma_1 \otimes \rho_2 \otimes \rho^E}$.
+Similarly, we have $\con{Q_1||P_2}{\sigma_1 \otimes \rho_2 \otimes \rho^E} \sim
+ \con{Q_1||Q_2}{\sigma_1 \otimes \sigma_2 \otimes \rho^E}$.
+By transitivity of $\sim$, we obtain the conclusion.
+\end{proof}
+Let configurations $\con{P_i}{\rho \otimes \rho^E_i}$ and
+$\con{Q_i}{\sigma \otimes \rho^E_i}$ formalize
+an actual and an ideal protocols for $i = 1,2$.
+By the above corollary, we have
+$\con{P_1 || P_2}{\rho_1 \otimes \rho_2 \otimes \rho^E} \sim \con{Q_1 ||
+ Q_2}{\sigma_1 \otimes \sigma_2 \otimes \rho^E}$.
+This means that $\con{P_1 || P_2}{\rho_1 \otimes \rho_2 \otimes \rho^E}$
+is approximately secure,
+provided that the ideal protocol is secure even if they run in
+parallel. The latter condition depends on protocols but possibly be
+satisfied. In fact, EDP-ideal protocol that we consider in the next
+chapter satisfies the condition, because Alice and Bob generate
+a shared key using pre-shared EPR pairs.
+Another example of application is discussed
+in the subsection Outputting Secret Keys in Section
+\ref{fml:policiesandtechs}.
+
+% \section{Comparison of the Two Relations}
+% The relation $\sim$ is 
+% defined only when the notion of negligibility makes sense
+% while the relation $\sim_{\zeta,\eta}$ is defined only when
+% the inequality $\ge$ makes sense. It is not a trivial task
+% compare the two relations. It is possible to assume that 
+% the parameters $\zeta$ and $\eta$ are functions of security parameters, but
+% to define an inequality $\ge$ on such functions appropriately is not a
+% trivial task. 
+
+% Let us assume again that quantum states depend on security parameters,
+% and for $f,g:\mathbb{N}\rightarrow [0,1]$, define $f \ge g$ iff $f(n)
+% \ge g(n)$ for all $n$. If
+% $\con{P}{\rho}\sim_{\zeta, \eta}\con{Q}{\sigma}$ holds for some 
+% negligible functions $\zeta, \eta$ with respect to $n$,
+% then $\con{P}{\rho} \sim \con{Q}{\sigma}$ holds. We do not know, however,
+% whether the converse is true. When we assume $\con{P}{\rho} \sim
+% \con{Q}{\sigma}$, by the condition 3 in Lemma \ref{neg:coinduction}, we
+% have
+% \[
+%  \forall \E_{\tilde r}:\mbox{CP map}.\, \exists
+%  \eta:\mbox{non-negligible}. \cdots
+% \]
+% but this does not immediately imply
+% \[
+%  \exists \eta:\mbox{non-negligible}.\, 
+% \forall \E_{\tilde r}:\mbox{CP map}. \cdots.
+% \]
+
+Although we use only the relation $\sim$ for
+the verification in this thesis, the relation 
+$\sim_{\zeta, \eta}$ will be useful when we
+evaluate the gap of two configurations quantitatively.
+By $\con{P}{\rho}\sim \con{Q}{\sigma}$, the value of the trace distance
+is simply
+understood to be negligible, but it cannot be evaluated more explicitly.
+% Besides, let us focus again on parallel composition.
+% For the relation $\sim$, we
+% have already discussed Corollary \ref{neg:multisession} but
+% the number of parallel composition cannot depend on a security
+% parameter.
+Using the relation $\sim_{\zeta, \eta}$,
+the gap can be evaluated concretely. For example,
+if $\con{P_i}{\rho_i \otimes \rho^E_i} \sim_{\zeta,\eta}
+\con{Q_i}{\sigma_i \otimes \rho^E_i}$ holds
+for all $\rho^E_i \in \D(\H_{\sfqv - \qv{P_i}})$
+for all $i \in [1..k]$ and $\qv{P_1} \cap \cdots \cap \qv{P_k} =
+\emptyset$ holds, then we have
+\[
+ \con{P_1||\cdots||P_k}{\rho} \sim_{\zeta', \eta'}
+ \con{Q_1||\cdots||Q_k}{\sigma},
+\]
+where $\zeta' = k\zeta$ and $\eta' = (k-1)(k+2)\zeta + \eta$.
+
+\section{Guarantees of Approximate Bisimulation}
+\subsection{Application to Verification of QKD protocols' Security}
+We explain about feasibility of the relation $\sim$ for verification
+of security of QKD protocols. In the next chapter, we will verify
+$\con{P}{\rho} \sim \con{Q}{\sigma}$, where
+$\con{P}{\rho}$ and $\con{Q}{\sigma}$ are configurations formalizing the EDP-based protocol
+(Section \ref{pre:EDPbased}) and EDP-ideal (Section \ref{fml:formalverif2}).
+% a sort of cheating protocol named
+% EDP-ideal. In EDP-ideal protocol, 
+% Alice and Bob initially share EPR pairs, and
+% they execute the same protocol as 
+% the EDP-based protocol until the decision of continue or aborting
+% by the result of the error checking. Only when they
+% decide to continue, they create the secret keys using pre-shared EPR
+% pairs instead of pairs obtained after the entanglement distillation
+% protocol.
+% Therefore, if the secret keys is created, Eve has no information
+% of the keys.
+Assume $\con{P}{\rho} \sim \con{Q}{\sigma}$ and
+\[
+ \con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha} 
+ \con{P_1}{\E^1_{\tilde r_1}(\rho_1)} \xrightarrow{\alpha_1} \cdots 
+ \xrightarrow{\sndq{ska}{k_A}} \con{P'}{\rho'}
+\]
+and $\tr{}{\rho'}$ is non-negligible, where
+the last transition $\xrightarrow{\sndq{ska}{k_A}}$
+represents that Alice's key $k_A$ is created\footnote{In Chapter 5, we
+actually formalize the protocols as configurations
+that do such transitions. This point is discussed in Section \ref{fml:outputtingsks}}.
+Then, there exists the following
+transition
+\[
+ \con{Q}{\E_{\tilde r}(\sigma)} \weak{\alpha} 
+ \con{Q_1}{\E^1_{\tilde r_1}(\sigma_1)} \weak{\alpha_1} \cdots 
+ \weak{\sndq{ska}{k_A}} \con{Q'}{\sigma'}
+\]
+such that $d(\tr{\qv{P'}}{\rho'}, \tr{\qv{Q'}}{\sigma'})$ is negligible.
+By Proposition \ref{par:trdisproperty}, we have that
+\begin{align*}
+ &|\tr{}{\rho'} - \tr{}{\sigma'}| \mbox{ and }
+ |\tr{}{\rho'}\cdot\tr{}{\pi\frac{\tr{\qv{P'}}{\rho'}}{\tr{}{\rho'}}} -
+ \tr{}{\sigma'}\cdot\tr{}{\pi\frac{\tr{\qv{Q'}}{\sigma'}}{\tr{}{\sigma'}}} | 
+\end{align*}
+are negligible for all projector $\pi$. Especially, let $\pi$ be
+the projector to the subspace where $i$-th bits of Alice's key and
+Eve's key are equal. We can rephrase the above expression as follows.
+\begin{align*}
+ &|\Pr(A) - \Pr(B)| \mbox{ and }
+ |\Pr(A)\Pr(k_{A,i} = k_{E,i}|A) - \Pr(B)\Pr(k'_{A,i} = k'_{E,i}|B)|
+\end{align*}
+are negligible, where 
+\begin{itemize}
+ \item $k_{A,i}$ and $k_{E,i}$ are random variables of $i$-th bits of
+       Alice's and Eve's keys in the EDP-based protocol, 
+ \item $k'_{A,i}$ and $k'_{E,i}$ are those in EDP-ideal, and
+ \item $A$ and $B$ are the events that
+       $\con{P}{\rho}$ reaches $\con{P'}{\rho'}$ and
+       $\con{Q}{\sigma}$ reaches $\con{Q'}{\sigma'}$.
+\end{itemize}
+Moreover, we have
+\begin{align*}
+    &|\Pr(A)\Pr(k_{A,i} = k_{E,i}|A) - \Pr(B)\Pr(k'_{A,i} = k'_{E,i}|B)|\\
+\le &\Pr(A)|\Pr(k_{A,i} = k_{E,i}|A) - \Pr(k'_{A,i} = k'_{E,i}|B)|\\
+ &+ \Pr(k'_{A,i} = k'_{E,i}|B)|\Pr(A) - \Pr(B)|\\
+= & \Pr(A)|\Pr(k_{A,i} = k_{E,i}|A) - \frac{1}{2}| + \frac{1}{2}|\Pr(A) - \Pr(B)|.
+\end{align*}
+The equation $\Pr(k'_{A,i} = k'_{E,i}|B) = \frac{1}{2}$ holds by the
+definition
+of EDP-ideal. If $\Pr(A)$ is greater than negligible, we have
+that $|\Pr(k_{A,i} = k_{E,i}|A) - \frac{1}{2}|$ is negligible.
+It seems possible to derive that the mutual information of Alice's and
+Eve's keys is negligible. Similarly, we have that Alice's and Bob's
+keys are identical with overwhelming probability.
+
+\subsection{On Guarantees in General Cases}
+As long as we verify security of an actual protocol $\con{P}{\rho}$ by
+proving $\con{P}{\rho} \sim \con{Q}{\sigma}$ for an ideal protocol
+$\con{Q}{\sigma}$, we can discuss similarly to the previous
+subsection.
+Concretely, if $\con{P}{\rho} \sim \con{Q}{\sigma}$, then
+for all $\con{P'}{\rho'}$ such that
+\[
+ \con{P}{\E_{\tilde r}(\rho)} \xrightarrow{\alpha} 
+ \con{P_1}{\E^1_{\tilde r_1}(\rho_1)} \xrightarrow{\alpha_1} \cdots 
+ \xrightarrow{\alpha_m} \con{P'}{\rho'}
+\]
+and $\tr{}{\rho'}$ is non-negligible,
+there exists $\con{Q'}{\sigma'}$ such that
+\[
+ \con{Q}{\E_{\tilde r}(\sigma)} \weak{\alpha} 
+ \con{Q_1}{\E^1_{\tilde r_1}(\sigma_1)} \weak{\alpha_1} \cdots 
+ \weak{\alpha_m} \con{Q'}{\sigma'}
+\]
+and $\con{P'}{\rho'} \sim \con{Q'}{\sigma'}$. 
+The last condition implies $d(\tr{\qv{P'}}{\rho'},
+\tr{\qv{Q'}}{\sigma'})$ is negligible.
+By proposition \ref{par:trdisproperty}, we have
+$$|\tr{}{\rho'} - \tr{}{\sigma'}|
+\mbox{ and } \tr{}{\rho'}d(\frac{\tr{\qv{P'}}{\rho'}}{\tr{}{\rho'}},
+\frac{\tr{\qv{Q'}}{\sigma'}}{\tr{}{\sigma'}})$$
+are negligible. 
+ We thus have the following conclusions.
+\begin{enumerate}
+ \item The probabilitiy to reach $\con{P'}{\rho'}$ from
+       $\con{P}{\rho}$ is negligibily colse
+       to that to reach $\con{Q'}{\sigma'}$ from $\con{Q}{\sigma}$.
+ \item The greater $\tr{}{\rho'}$ we have, the less 
+       $d(\frac{\tr{\qv{P'}}{\rho'}}{\tr{}{\rho'}},
+       \frac{\tr{\qv{Q'}}{\sigma'}}{\tr{}{\sigma'}})$ we have.
+       Especially, if $\tr{}{\rho'}$ is greater than negligible,
+       then $d(\frac{\tr{\qv{P'}}{\rho'}}{\tr{}{\rho'}},
+       \frac{\tr{\qv{Q'}}{\sigma'}}{\tr{}{\sigma'}})$ is negligible.
+\end{enumerate}
+When the protocol $\con{P}{\rho}$ is for generation of certain data,
+the data will be sent to the outside by the
+final transition $\xrightarrow{\alpha_m}$ of the form
+$\xrightarrow{\sndq{c}{q}}$,
+where $\H_q$ is the state space of the data.
+By the condition 2 above, we have that 
+whenever the probability to reach $\con{P'}{\rho'}$
+from the start point $\con{P}{\rho}$ is greater than negligible,
+the data have been almost correctly generated
+at $\con{P'}{\rho'}$.
+
+Another important way to examine end guarantees of the approximate
+bisimulation is to define \emph{testing equivalence}
+\cite{DeNicola1984, Deng2009}
+or \emph{observational equivalence} 
+\cite{Blanchet2008cryptoverif, Yasuda2014} that includes the
+approximate bisimulation. Observationally equivalent processes
+become ready to use the same channel with the same probability
+under the application of an arbitrary evaluation context.
+It is an open problem to define such equivalence that
+includes the approximate bisimulation.
+Before the approximation,
+to define testing or observational equivalence that includes
+bisimulation in qCCS is still an open problem.
+\emph{Reduction barbed congruence} $\approx_r$ is defined
+\cite{DengFeng2012} but it
+seems more distinguishing than what is meant by observational
+equivalence, because it
+requires \emph{reduction closedness}:
+if $\con{P}{\rho} \approx_r \con{Q}{\sigma}$ and $\con{P}{\rho}
+\Rightarrow \mu$ hold, then there exists $\nu$ satisfying
+$\con{Q}{\sigma} \Rightarrow \nu$ and $\mu \approx_r \nu$.
+The relation $\approx_r$ in fact coincides with the bisimulation
+relation $\approx$.
+Yasuda defined two kinds of observational equivalence
+$\approx_{\mathit{oe}}$ and $\approx_{\mathit{oe}}^{\mathit{st}}$
+on qCCS configurations \cite{Yasuda2014} but neither of them includes
+$\approx$.
+
+\section{Automated Verification of Approximate Bisimulation}
+\subsection{Extension of the Symbolic Representation and  the Algorithm}
+\label{neg:extensionofalgorithm}
+We extended Verifier1, which is described in 
+Chapter \ref{symqccs}, to verify the approximate bisimilarity.
+Let us call the extended verifier \emph{Verifier2}.
+We applied Verifier2 to the second part of
+Shor-Preskill's security proof. This is described in the next chapter.
+
+Since the outsider's quantum operations are assumed 
+to be CP (Definition \ref{neg:defofapproxbisim}),
+it was necessary to extend the syntax of symbolic representations of
+probability-weighted quantum states. The set $\mathcal{S}$ of the symbolic
+representations was defined in Definition \ref{symqccs:symbrep}.
+In the definition, we assumed $\mathit{op}$ is an element of 
+$S_{\mathit{op}}$, which is a set of TPCP map symbols.
+The expressions 
+$\mathtt{proj0}\mathtt{[}b\mathtt{](}\rho\mathtt{)}$ and
+$\mathtt{proj1}\mathtt{[}b\mathtt{](}\rho\mathtt{)}$ 
+represent applications of special CP maps
+$\ket{0}\bra{0}_b\braw{\rho}\ket{0}\bra{0}_b$ and
+$\ket{1}\bra{1}_b\braw{\rho}\ket{1}\bra{1}_b$
+but application of general CP maps
+was not allowed in the syntax.
+
+For the extension, we first add a definition
+\begin{itemize}
+ \item $S_{\mathit{cp}}$ is a set of symbols representing CP maps.
+       Symbols $\mathtt{proj0}$ and $\mathtt{proj1}$ are elements of
+       $S_{\mathit{cp}}$.
+\end{itemize}
+We then define the set $\mathcal{S}'$ of extended
+symbolic representations. In the definition, 
+we do not refer $S_\mathit{op}$ because
+TPCP maps are also CP maps.
+\begin{defi}
+\label{neg:exsymbrep}
+\begin{align*}
+\mathcal{S}' \ni \rho, \sigma ::=\,\, &X\mathtt{[}\tilde q\mathtt{]} ~|~
+\mathit{cp}\mathtt{[}\tilde q\mathtt{](}\rho\mathtt{)} ~|~ \rho \,
+  \mathtt{*} \, \sigma
+~|~\mathtt{Tr}\mathtt{[}\tilde q\mathtt{](}\rho\mathtt{)}
+\end{align*}
+where $\mathit{cp} \in S_{\mathit{cp}}$.
+\end{defi}
+
+The interpretation $\braw{\cdot}:\mathcal{S}' \rightarrow \Delta(\H)$
+is naturally extended.
+Verifier2 obeys the same transition rules as the
+previous one, and
+takes as input two elements in
+$\mathcal{P} \times \mathcal{S'}$,
+a user-defined set of equations $\mathit{eqs}$
+on symbolic quantum states,
+and additionally a user-defined set of triples
+$\mathit{inds} \subseteq \mathcal{S'} \times \mathcal{S'} \times
+S_\mathit{nat}$, which we call {\it indistinguishability expressions}.
+An indistinguishability expression $(\rho, \sigma, n)$ intuitively means
+the trace distance of $\rho$ and $\sigma$ is negligible with respect to
+$n$.
+
+We modified the steps 1, 4, 5, 6, and 7 in the algorithm described in
+Section \ref{symqccs:algorithmforbisim}.
+The new algorithm of the recursive procedure is as follows.
+\begin{enumerate}
+ \item The procedure takes as input two configurations
+       $\con{P_0}{\rho_0}$,
+       $\con{Q_0}{\sigma_0}$ and user-defined equations $\mathit{eqs}$
+       and indistinguishability expressions $\mathit{inds}$
+       on quantum states.
+ \item If $P_0$ and $Q_0$ can perform any $\tau$-transitions of
+       TPCP map applications, they are all performed at this point.
+       Let $\con{P}{\rho}$ and $\con{Q}{\sigma}$ be obtained
+       configurations.
+ \item Whether $\qv{P} = \qv{Q}$ is checked. If it does not hold, the
+       procedure returns $\mathit{false}$.
+ \item Whether $\ptrtt{\qv{P}}{\rho} = \ptrtt{\qv{Q}}{\sigma}$ is
+       checked using $\eqs$ and $\inds$.
+       If it does not hold, the procedure returns $\mathit{false}$.
+ \item A new {\it CP} map symbol $\E\texttt{[}\qv{\rho} - \qv{P}\texttt{]}$
+       that stands for an
+       arbitrary operation is generated. 
+ \item For each $\con{P'}{\rho'}$ such that
+       $\con{P}{\E\texttt{[}\qv{\rho} -
+       \qv{P}\texttt{](}\rho\texttt{)}} \xrightarrow{\alpha}
+       \con{P'}{\rho'}$,
+       the procedure checks whether there exists $\con{Q'}{\sigma'}$ such
+       that \\
+       $\con{Q}{\E\texttt{[}\qv{\sigma} -
+       \qv{Q}\texttt{](}\sigma\texttt{)}} \weak{\hat \alpha}
+       \con{Q'}{\sigma'}$ and 
+       the procedure returns $\mathit{true}$ with input
+       $\con{P'}{\rho'}$,
+       $\con{Q'}{\sigma'}$, and $\mathit{eqs}$. If there exists, it goes
+       to the
+       next step 7. Otherwise, it returns $\mathit{false}$.
+ \item For each $\con{Q'}{\sigma'}$ such that
+       $\con{Q}{\E\texttt{[}\qv{\sigma} -
+       \qv{Q}\texttt{](}\sigma\texttt{)}} \xrightarrow{\alpha}
+       \con{Q'}{\sigma'}$,
+       the procedure checks whether there exists $\con{P'}{\rho'}$ such
+       that\\
+       $\con{P}{\E\texttt{[}\qv{\rho} -
+       \qv{P}\texttt{](}\rho\texttt{)}} \weak{\hat \alpha}
+       \con{P'}{\rho'}$ and 
+       the procedure returns $\mathit{true}$ with input
+       $\con{P'}{\rho'}$ and
+       $\con{Q'}{\sigma'}$, and $\mathit{eqs}$. If there exists, it
+       returns
+       $\mathit{true}$. Otherwise, it returns $\mathit{false}$.
+\end{enumerate}
+The way to use $\inds$ to test $\ptrtt{\qv{P}}{\rho} =
+\ptrtt{\qv{Q}}{\sigma}$
+is similar to that of $\eqs$, that is,
+for $(\rho, \sigma, n) \in \inds$,
+a part in an objective quantum state
+that matches to $\rho$ is rewritten to $\sigma$.
+
+\subsection{Correctness of the Extended Verifier}
+A user-defined set $\inds$ is said to be valid if for all
+element $(\rho, \sigma, n) \in \mathit{inds}$, $d(\braw{\rho},
+\braw{\sigma})$ is a negligible function of $\braw{n}$.
+Let $\mathit{eqs}$ and $\inds$ be valid.
+Let a relation $\R_{\eqs, \inds} \subseteq \C \times \C$ be defined
+as follows.
+\begin{align*}
+ \R_{\eqs, \inds} :=
+ \{&(\con{P}{\braw{\rho}},
+ \con{Q}{\braw{\sigma}}) \,|\,
+ \mbox{ Verifier2 returns } \mathit{true}
+ \mbox{ with }\\
+ & \con{P}{\rho}, \con{Q}{\sigma} \mbox{ using } \mathit{eqs}
+ \mbox{ and } \mathit{inds}.
+\}
+\end{align*}
+The relation $\R_{\eqs, \inds}$ is an approximate bisimulation
+relation.
+
+The argument about the correctness of Verifier2
+is basically similar to that about the original one.
+We focused on the two different points. The first is
+that whether the trace distance of objective quantum
+states is negligible or not is tested instead of the equality of
+the states. The second point is about the simulation condition.
+
+\subsubsection{On the Static Condition of Partial Trace}
+It is necessary to check the partial rewriting of quantum states
+done by Verifier2 is correct. It rewrites a
+symbolic representation of the form $\rho_l \, \mathtt{*}\,
+ \rho \,\mathtt{*}\, \rho_r$ to
+the symbolic representation $\rho_l \, \mathtt{*}\, \sigma
+ \,\mathtt{*}\, \rho_r$ given
+$(\rho, \sigma, n) \in \inds$. 
+The correctness is guaranteed from the fact that 
+$d(X, Y) = d(X_l \otimes X \otimes X_r,
+X_l \otimes Y \otimes X_r)$ holds for all $X, Y, X_l, X_r \in
+\Delta(\H)$. If $(\rho, \sigma, n)$ is valid, namely 
+$d(\braw{\rho}, \braw{\sigma})$ is negligible with respect to $n$, 
+then $d(\braw{\rho_l \, \mathtt{*}\,
+ \rho \,\mathtt{*}\, \rho_r},
+\braw{\rho_l \, \mathtt{*}\,
+ \sigma \,\mathtt{*}\, \rho_r})$ is negligible
+ with respect to $n$ because
+$d(\braw{\rho_l \, \mathtt{*}\,
+ \rho \,\mathtt{*}\, \rho_r},
+\braw{\rho_l \, \mathtt{*}\,
+ \sigma \,\mathtt{*}\, \rho_r}) =
+d(\braw{\rho_l} \otimes
+ \braw{\rho} \otimes \braw{\rho_r},
+\braw{\rho_l} \otimes
+ \braw{\sigma} \otimes \braw{\rho_r}
+)=
+d(\braw{\rho},\braw{\sigma})
+$ holds.
+
+\subsubsection{On the Simulation Condition}
+The simulation condition of approximate bisimulation is only required
+to transitions with non-negligible probability, stating
+\begin{itemize}
+ \item If $\con{P}{\E_{\tilde r}(\rho)}
+       \xrightarrow{\alpha}
+       \con{P'}{\rho'}$ holds and $\tr{}{\rho'}$ is
+       non-negligible, then\\
+       $\con{Q}{\E_{\tilde r}(\sigma)} \weak{\hat \alpha}
+       \con{Q'}{\sigma'}$ and 
+       $\con{P'}{\rho'} \R \con{Q'}{\sigma'}$ hold
+       for some $\con{Q'}{\sigma'}$.
+\end{itemize}
+However, Verifier2 does not check whether the probability of a
+transition is non-negligible or not. It returns $\mathit{false}$
+when a transition cannot be simulated even if the probability is
+negligible. As for simulation,
+the condition that Verifier2 returns $\mathit{true}$
+is strictly stronger than the simulation condition of the approximate
+bisimulation.
+
+\section{Discussion}
+\subsection{Relation between the Verifiers}
+Before the extension, the steps 6 and 7 required the 
+correspondence of qubit variable $b$ when there is a transition
+caused by (Meas0) or (Meas1) rules.
+%, in other words, caused by a part of a process of the form
+%$\measure{b}{P}$.
+The proof of Verifier1's soundness was made easier by this condition.
+Verifier2 does not check such correspondence, which straightforwardly
+checks the
+conditions stated in the definition of the relation $\sim$.
+On this point, Verifier1 checks more strict condition.
+On the other hand, for the step 5, Verifier2
+generates a CP map symbol representing the outsider's operation, which
+is not necessarily TPCP, while Verifier1 generates a TPCP map symbol.
+On this point, Verifier2 checks more strict condition.
+
+In fact, whether an outsider's operation is TPCP or CP
+does not matter in verification in most cases.
+Only the rewriting rule (3.2) of
+partial traces in Section \ref{symqccs:traceoutalgo} cannot
+be applied if $\mathit{op}$ is a CP map symbol. Except for
+it, quantum operators are treated equivalently in the both verifiers
+whether they are TPCP or CP.
+Moreover, even if outsider's operators are TPCP,
+the rule (3.2) cannot be applied to them
+in most cases, where we assume the outsider has her own
+``local memory''.
+Assume she does not send a quantum variable $q^E$
+to the insider (the process).
+It is in the domain of her operation $\E$ in general.
+Hence, an arbitrary symbol generated in the step 5 is of the form 
+$\E\texttt{[}\cdots, q^E, \cdots\texttt{]}$.
+However, she does not send $q^E$ to the process.
+Therefore, in any expressions of the 
+form 
+\[
+ \ptrtt{\tilde q}{\cdots\E\texttt{[}\cdots, q^E, \cdots\texttt{]}
+ \cdots},
+\]
+which appear in the test of equality of partial traces, 
+$q^E \notin \tilde q$ holds and thus the rule (3.2) cannot be applied.
+
+Let us now consider a new verifier, which we call Verifier3,
+that generates {\it CP} maps in the 
+step 5 but executes the same algorithm as Verifier1.
+We have that Verifier3 verifies more strict condition
+than Verifier2, in other words, if Verifier3 returns 
+$\mathit{true}$ with configurations $\con{P}{\rho}$, $\con{Q}{\sigma}$,
+and user-defined equations $\mathit{eqs}$, Verifier2
+returns $\mathit{true}$ with the same input.

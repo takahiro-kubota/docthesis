@@ -1,0 +1,127 @@
+%#BIBTEX jbibtex main
+\documentclass[doctor, 11pt]{iscs-thesis}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{stmaryrd}
+\usepackage{braket}
+\usepackage{url}
+\usepackage{multicol}
+\usepackage[dvipdfmx]{graphicx}
+
+%-------------------
+\newcommand{\dom}[1]{\mathrm{dom}(#1)}
+\newcommand{\cod}[1]{\mathrm{cod}(#1)}
+\newcommand{\defequiv}[0]{\overset{\mathrm{def}}{\equiv}}
+\newcommand{\defeq}[0]{\overset{\mathrm{def}}{=}}
+\newcommand{\strg}[0]{\,\dot\approx\,}
+\newcommand{\xgizarrow}[1]{\overset{#1}{\rightsquigarrow}}
+
+\newcommand{\A}[0]{\mathcal{A}}
+\newcommand{\C}[0]{\mathcal{C}}
+\newcommand{\D}[0]{\mathcal{D}}
+\newcommand{\R}[0]{\mathcal{R}}
+\newcommand{\E}[0]{\mathcal{E}}
+\newcommand{\F}[0]{\mathcal{F}}
+\newcommand{\G}[0]{\mathcal{G}}
+\renewcommand{\H}[0]{\mathcal{H}}
+\newcommand{\I}[0]{\mathbb{I}}
+\newcommand{\N}[0]{\mathbb{N}}
+
+\newcommand{\CSS}[0]{\mathrm{CSS}}
+
+\newcommand{\Con}[0]{\mathit{Con}}
+\newcommand{\qChan}[0]{\mathit{qChan}}
+\newcommand{\Proc}[0]{\mathit{Proc}}
+\newcommand{\qVar}[0]{\mathit{qVar}}
+\newcommand{\Env}[0]{\mathit{Env}}
+\newcommand{\nil}[0]{\mathtt{nil}}
+\newcommand{\inds}[0]{\mathit{inds}}
+\newcommand{\eqs}[0]{\mathit{eqs}}
+\newcommand{\pr}[1]{{\rm pr}(#1)}
+\newcommand{\ptr}[2]{\mathtt{Tr}\texttt{[}#1\texttt{]}\texttt{(}#2\texttt{)}}
+\newcommand{\ptrtt}[2]{\texttt{Tr[}#1\texttt{](}#2\texttt{)}}
+\newcommand{\qv}[1]{\mathrm{qv}(#1)}
+\newcommand{\cnv}[1]{\mathrm{cnv}(#1)}
+\newcommand{\tr}[2]{{\rm tr}_{#1}(#2)}
+\newcommand{\braw}[1]{[\![#1]\!]}
+\newcommand{\brat}[1]{\langle #1 \rangle}
+\newcommand{\vecb}[1]{{\bf #1}}
+\newcommand{\con}[2]{\llparenthesis #1, #2 \rrparenthesis}
+%\newcommand{\con}[2]{\langle #1, #2 \rangle}
+\newcommand{\sndq}[2]{\mathsf{#1}! #2}
+\newcommand{\rcvq}[2]{\mathsf{#1}? #2}
+\newcommand{\subst}[2]{\{#1 / #2\}}
+
+\renewcommand{\braket}[2]{\langle #1|#2\rangle}
+\renewcommand{\bra}[1]{\langle #1|}
+\renewcommand{\ket}[1]{|#1\rangle}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+
+\newcommand{\discard}[1]{\mathtt{discard(} #1 \mathtt{)}}
+\newcommand{\myif}[2]{\mathtt{if}~#1~\mathtt{then}~#2~\mathtt{fi}}
+\newcommand{\measure}[2]{{\tt meas}~#1~{\tt then}~#2~{\tt saem}}
+
+\newcommand{\op}[2]{#1[#2]}
+\newcommand{\dsym}[2]{#1\texttt{[}#2\texttt{]}}
+\newcommand{\opapp}[3]{#1_{#2}(#3)}
+\newcommand{\opsym}[3]{#1\texttt{[}#2\texttt{]}\texttt{(}#3\texttt{)}}
+
+\newcommand{\weak}[1]{\xrightarrow{\tau*} \xrightarrow{#1}
+\xrightarrow{\tau*}}
+
+\newcommand{\barb}[4]{#1 \Downarrow^{#2} (#3, #4)}
+
+\newcommand{\brac}[1]{\{#1\}}
+\newcommand{\EPR}[0]{\mathit{EPR}}
+\newcommand{\sfqv}[0]{\mathit{qVar}}
+\newcommand{\pair}[2]{(#1, #2)}
+%-------------------
+\newtheorem{defi}{Definition}[section]
+\newtheorem{prf}{Proof}
+\newtheorem{prop}[defi]{Proposition}
+\newtheorem{thm}[defi]{Theorem}
+\newtheorem{lem}[defi]{Lemma}
+\newtheorem{clm}[defi]{Claim}
+\newtheorem{col}[defi]{Corollary}
+\newtheorem{ex}[defi]{Example}
+\newtheorem{rem}[defi]{Remark}
+
+%-------------------
+
+\etitle{Application of Formal Methods \\
+to Quantum Cryptography}
+\jtitle{·Á¼°Åª¼êË¡¤ÎÎÌ»Ò°Å¹æ¤Ø¤Î±þÍÑ}
+\eauthor{Takahiro Kubota}
+\jauthor{µ×ÊÝÅÄ µ®Âç}
+\esupervisor{Masami Hagiya}
+\jsupervisor{ÇëÃ« ¾»¸Ê}
+\supervisortitle{Professor} % Professor, etc.
+\date{December 13, 2013}
+%-------------------
+\begin{document}
+\input{abstract}
+\maketitle
+\input{acknowledge}
+\frontmatter
+\tableofcontents
+\listoffigures
+%\listoftables
+%-------------------
+\mainmatter
+\include{intro}
+\include{prel}
+\include{sym_qccs}
+\include{prob_bisim_part1}
+\include{prob_bisim_part2} % negligible
+\include{formaliz}
+\include{concl}
+%-------------------
+\nocite{*}
+\bibliographystyle{plain}
+%\bibliographystyle{unsrt}
+\bibliography{main}
+
+\end{document}

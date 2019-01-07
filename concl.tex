@@ -1,0 +1,177 @@
+\chapter{Conclusions}
+\section{Automated Verification of Bisimilarity of Configurations}
+\subsection*{Impact of Automation}
+Our automatic verification methods
+broaden the range of application of qCCS.
+In security proofs, equivalence of protocols is often discussed.
+It can be described as bisimilarity but it is
+difficult to check by hand when state transitions of processes
+have many long branches.
+ Besides, equality of outsider's views
+between two protocols must be checked in each step.
+Outsider's view is calculated from collective quantum state,
+which is possibly denoted by a huge matrix.
+One might prove bisimilarity with the insight of state transitions
+without tracing them. However, it is not always possible and
+possibly contradicts a purpose of formal methods, namely,
+to make implicit inferences in proofs explicit.
+ Our verifiers do exhausting parts of proofs of
+behavioural equivalence: it checks correspondence
+of all state transitions up to invisible ones and 
+equality of outsider's views using equations and 
+indistinguishability expressions.
+Let us call equations and indistinguishability expressions {\it axioms}
+here.
+On the other hand, a user only has to
+examine the correctness of formalization of protocols and validity of
+axioms.
+It could be difficult to find all appropriate axioms for a proof
+immediately. The verifiers are also able to show quantum states,
+outsider's views, and/or
+processes when the recursive procedure returns $\mathit{false}$. With
+the information,
+a user can modify axioms to input.
+
+\subsection*{Equations and Indistinguishability Expressions}
+\label{concl:validityof}
+Formal verification of validity of axioms is important but
+not in the scope of this thesis. Most of the axioms in Chapter 
+\ref{formaliz} are obtained formalizing properties of CSS-QECC
+\cite{CalderbankShor1996} or Lo and Chau's theorem \cite{LoChau1999}
+and their validity is not self-evident.
+Nevertheless, the validity can be verified as just {\it equality or
+negligible trace distance of density operators}.
+One does not have to consider {\it communication} of principals
+and {\it nondeterminism}
+of execution models to verify the axioms, because
+conditions about them are verified using the process calculus.
+
+Application of a sequential quantum programming language such as 
+QPL \cite{Selinger2004} is a possible way to verify axioms.
+In QPL's semantics, the programs are interpreted to TPCP maps.
+The bodies of symbolically-represented TPCP maps, such as 
+$\mathtt{css\_projection[}q,r,s\mathtt{]}$ and
+$\mathtt{css\_syndrome[}q,r,s\mathtt{]}$ described in Chapter
+\ref{formaliz},
+are possibly formalized as QPL programs. Validity of axioms could be
+verified as equivalence or ``indistinguishability'' of the programs.
+
+\section{Congruent Approximate Bisimulation Relation}
+The notion of bisimulation proposed by Feng et al. \cite{DengFeng2012}
+was applicable to verify equivalence of BB84 and the EDP-based protocol
+\cite{Kubota2012}. The configurations that are bisimilar in the original
+qCCS's definition behave equivalently from the outside.
+However, it seemed not to applicable directly 
+to verify the security proof of the latter. To do it, 
+it seemed to be a possible way 
+to consider an ideal protocol and prove that 
+they behave equivalently or 
+{\it almost} equivalently in the view of Eve 
+but the EDP-based protocol is not
+ideal, that is, it leaks negligible amount of information to Eve.
+We presented two notions of approximate bisimulation, 
+$\sim_{\zeta, \eta}$ and $\sim$, in Chapter \ref{prob_bisim}.
+In our definition of $\sim$,
+the configurations are approximately bisimilar as
+long as they disclose quantum states to the outsider with negligible
+trace distance and perform identical transitions up to
+$\xrightarrow{\tau}$ if their probability is non-negligible.
+As described in Chapter \ref{formaliz}, the notion of approximate
+bisimulation $\sim$
+was applicable to verify formally
+the security proof of the EDP-based protocol.
+
+We studied the properties of the approximate bisimulation relations.
+Some of them, 
+such as those stated in Proposition \ref{par:sym-by-par}, \ref{neg:sym-by-par}, Lemma
+\ref{prob_bisim:parcoinduction}, \ref{neg:coinduction}, and \ref{neg:weaksimulated},
+are analogy of those of conservative bisimulation relations \cite{Milner1999,
+FengDuanYing2011, DengFeng2012}. 
+As stated by Lemma \ref{par:transitivitylike}, the relation
+$\sim_{\zeta, \eta}$ has a transitivity-like property. The relation $\sim$
+is an equivalence relation, which is stated by Lemma
+\ref{neg:equivalence}.
+Furthermore, $\sim_{\zeta, \eta}$ and $\sim$ are closed under
+application of an arbitrary
+evaluation context as stated in Corollary \ref{par:congruence} and
+\ref{neg:congruence}. The property suggest sanity of our definitions as
+well as feasibility in practice. Concretely, they are useful when
+we consider multiple sessions of a protocol or its behavior employed
+as a primitive of another protocol.
+
+\section{Formal Verification of Security Proofs of\\
+Quantum Cryptographic Protocols}
+We formally verified Shor and Preskill's security proof of BB84
+\cite{ShorPreskill2000} using our verifiers.
+The first verifier verified bisimilarity of $\mathtt{BB84}$ and
+$\mathtt{EDPbased}$ and the second verifier
+verified approximate bisimilarity of $\mathtt{BB84}$,
+$\mathtt{EDPbased}$, and $\mathtt{EDPideal}$.
+To the best of our knowledge, 
+this is the first work where \emph{cryptographic security} of
+a quantum cryptographic protocol 
+is formally verified using a quantum process calculus 
+a software tool.
+
+Shor and Preskill's security proof is simple compared to
+other proofs \cite{Mayers2001, KoashiPreskill2003}, where more general
+execution models are assumed.
+Actually,
+Shor and Preskill's proof is clearly understood by researchers
+in quantum cryptography \cite{Mayers2001, KoashiPreskill2003, Lo2003}
+and it seems not to be an emergent task to verify it formally.
+We consider our work as a step to
+apply formal methods practically to general quantum protocols.
+
+\section{Future Work}
+Although we applied our verifiers to Shor and Preskill's security proof,
+we did not to other proofs. For B92 and \cite{Bennett1992}
+the six-state protocol \cite{Bruss1998}, which are QKD protocols,
+the proofs \cite{TamakiKoashiImoto2003, Lo2001} that are similar to Shor
+and Preskill's have been presented:
+the security of the objective protocol is reduced to an EDP-based
+protocol. The notions of bisimilarity and
+approximate bisimilarity are possibly applied to them.
+
+There are also several security proofs of BB84 with different
+assumptions. To broaden the range of formal verification using
+process calculi, we have to consider the way to verify proofs
+with different patterns of arguments.
+
+As mentioned in Subsection \ref{concl:validityof}, 
+formal verification of validity of axioms is future work. 
+Furthermore, to broaden the
+range of automation,
+the algorithms must be improved to test equality and
+indistinguishability 
+of symbolically-represented partial traces
+using the axioms. In this thesis,
+we adopt a quite simple algorithm for the tests:
+each axiom is applied only once for each test
+in the order of user's definition.
+Although such simple
+algorithm is applicable to verify relatively simple
+verification 
+objectives such as Shor and Preskill's security proof, improved
+algorithms help us to verify more general ones.
+It is possible to implement a \emph{completion} algorithm to the
+verifiers and apply it to the rewriting system consisting of axioms.
+An algorithm similar to Knuth-Bendix completion \cite{KnuthBendix1970}
+is adopted by $\mathsf{CryptoVerif}$
+\cite{Blanchet2008cryptoverif} to simplify terms that represent
+computations on bitstrings using user-defined equations.
+With a complete rewriting system, equality and indistinguishability
+of the symbolic representations are decided.
+
+If quantum cryptographic protocols are formalized as 
+configurations and
+proven bisimilar, we expect they are equivalent in purely quantum 
+cryptographic sense. However, 
+correspondence between bisimilarity and physical
+equivalence is only intuitively understood.
+Compared to the tools we introduced in Section \ref{intro:tools},
+our verifiers seems to be relatively close to 
+verifiers of quantum cryptographic proofs
+in that they do not idealize cryptographic primitives.
+To consider physical semantics of quantum process calculi
+is also future work.
